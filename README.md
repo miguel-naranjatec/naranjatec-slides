@@ -64,7 +64,7 @@ pip install -r requirements.txt
 Tipografia de marca (4 familias, todas gratuitas OFL, `.ttf` incluidos en
 `brand/assets/fonts/`): titulos **Google Sans** (con enfasis en **Playfair
 Display** italica), cuerpo **Instrument Sans**, botones/mono **Geist Mono**. Los
-iconos usan **Material Icons Outlined** (Google, multiplataforma Windows/Mac). Para
+iconos usan **Material Symbols Outlined 300** (Google, multiplataforma Windows/Mac). Para
 ver el deck con la tipografia correcta, instala las fuentes en la maquina que lo
 ABRE (ver `brand/assets/fonts/README.md`). Si no estan, PowerPoint sustituye por
 otra sans y las presentaciones siguen funcionando (los iconos si necesitan la

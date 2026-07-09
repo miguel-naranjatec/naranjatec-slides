@@ -318,7 +318,7 @@ def _decor(slide, x, y, size, rotation=0, alpha=14000, blur=120000):
 
 
 def _icon(slide, x, y, size, glyph, color=T.AZUL_OSCURO):
-    """Dibuja un icono monolinea (T.FONT_ICON = Material Icons Outlined) centrado
+    """Dibuja un icono monolinea (T.FONT_ICON = Material Symbols Outlined 300) centrado
     en la caja, con un pequeno nudge vertical (-4%) para el centrado optico."""
     dy = int(round(int(size) * -0.04))
     b = slide.shapes.add_textbox(x, Emu(int(y) + dy), size, size)

@@ -15,8 +15,9 @@ de cliente de `brand/assets/img/`, la carpeta `avatars/` con fotos de personas
 reales, 18 fotos de la oficina, y la propuesta comercial de
 `content/nereidas.py` (sin cifras economicas). No hay credenciales ni secretos.
 
-Las 4 familias tipograficas son OFL y Material Icons Outlined es Apache-2.0:
-redistribuirlas dentro del repo es legitimo.
+Las 4 familias tipograficas son OFL y Material Symbols es Apache-2.0:
+redistribuirlas dentro del repo es legitimo. La fuente de iconos es una instancia
+estatica a peso 300 generada con `scripts/make_icon_font.py`.
 
 ## Mensaje para el companero
 

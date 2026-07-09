@@ -54,13 +54,15 @@ def find_exe(candidates):
 
 
 def brand_font_files():
-    """Los .ttf estaticos de las 4 familias + el .otf de iconos.
+    """Los .ttf estaticos de las 4 familias + la fuente de iconos.
 
     Se ignoran las VariableFont: PowerPoint (y LibreOffice) no seleccionan bien
-    los pesos de una fuente variable.
+    los pesos de una fuente variable. La de iconos ya viene congelada a peso 300
+    por scripts/make_icon_font.py.
     """
     files = [f for f in FONTS_DIR.glob("*/static/*.ttf")]
-    files += list((FONTS_DIR / "Material_Icons").glob("*.otf"))
+    icons = FONTS_DIR / "Material_Icons"
+    files += list(icons.glob("*.ttf")) + list(icons.glob("*.otf"))
     return files
 
 

@@ -115,9 +115,12 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
 - Imagenes: `T.img("nombre.jpg")` (relativo a `brand/assets/img/`; lanza error si
   no existe). Fotos de oficina reales en `T.img("oficina/naranjatec_XXXX.jpg")`.
 - Iconos de linea: `T.ICON["cloud"]`, `["shield"]`, `["globe"]`, etc. (ver el dict
-  `ICON` en `brand/theme.py`). Fuente `Material Icons Outlined` (multiplataforma,
-  bundled en `brand/assets/fonts/Material_Icons/`). Las estrellas de valoracion de
+  `ICON` en `brand/theme.py`). Fuente `Material Symbols Outlined 300` (Google,
+  congelada a peso 300 con `scripts/make_icon_font.py`, bundled en
+  `brand/assets/fonts/Material_Icons/`). Las estrellas de valoracion de
   `add_quote` se dibujan como forma nativa rellena (`MSO_SHAPE.STAR_5_POINT`).
+  Para anadir un icono nuevo: buscar su nombre en el `.codepoints`, anadirlo al
+  dict `ICON_NAMES` de `scripts/make_icon_font.py` y regenerar.
 - Subtitulos serif: pasar `subtitle="..."` (Playfair italica) en los layouts que lo
   aceptan.
 - Numero de pagina: usar un contador `n()` como en los ejemplos; los separadores de
@@ -180,6 +183,6 @@ y avisar al usuario de que conviene sustituirlas por fotos reales del cliente.
 
 Amarillo `#FFCD33`, azul `#1099ED`, azul profundo `#0B3D66`, acento naranja
 `#FF9E2C`. Tipografia: titulos Google Sans (enfasis Playfair Display italica),
-cuerpo Instrument Sans, mono/botones Geist Mono, iconos Material Icons Outlined. Fondo
+cuerpo Instrument Sans, mono/botones Geist Mono, iconos Material Symbols Outlined 300. Fondo
 blanco calido `#FAF9F6`, tarjetas blancas con sombra suave que "flotan". Todo
 centralizado en `brand/theme.py`.

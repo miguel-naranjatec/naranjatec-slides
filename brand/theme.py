@@ -53,24 +53,30 @@ FONT_NUM = "Google Sans"             # cifras grandes (mismo sans que titulos, c
 FONT_BODY = "Instrument Sans"        # cuerpo (regular)
 FONT_BODY_MED = "Instrument Sans Medium"  # cuerpo con algo mas de peso
 FONT_MONO = "Geist Mono"             # botones/pills y etiquetas con estilo mono
-# Iconos monolinea multiplataforma: Material Icons Outlined (Google, Apache 2.0).
-# El .otf esta bundled en brand/assets/fonts/Material_Icons/ (funciona en Windows
-# y Mac una vez instalado). Se eligio frente a "Segoe Fluent Icons" (solo Windows)
-# para que los decks se vean igual en Mac.
-FONT_ICON = "Material Icons Outlined"
+# Iconos monolinea multiplataforma: Material Symbols Outlined (Google, Apache 2.0),
+# congelada a peso 300 (trazo mas fino que el 400 por defecto). El .ttf estatico
+# esta bundled en brand/assets/fonts/Material_Icons/ y se regenera con
+# scripts/make_icon_font.py. Sustituye a "Segoe Fluent Icons" (solo Windows).
+#
+# El nombre de familia lleva el peso a proposito: si se llamase "Material Symbols
+# Outlined" a secas y alguien tuviera instalada la fuente oficial de Google,
+# PowerPoint usaria esa (peso 400) en silencio. Asi, si falta, salen cajas.
+FONT_ICON = "Material Symbols Outlined 300"
 
-# Glyphs de icono (codepoints PUA de Material Icons Outlined). Centralizados para
+# Glyphs de icono (codepoints PUA de Material Symbols). Centralizados para
 # reutilizarlos desde el contenido: T.ICON["cloud"], etc. Ver el fichero
-# .codepoints junto al .otf para el mapa nombre->codigo completo.
+# .codepoints junto al .ttf para el mapa nombre->codigo completo. OJO: los
+# codepoints de Material Symbols NO coinciden con los de Material Icons; el mapa
+# nombre-semantico -> nombre-de-Google vive en scripts/make_icon_font.py.
 ICON = {
-    "globe": "\uE80B", "cloud": "\uE2BD", "server": "\uE875", "rack": "\uEB2F",
-    "network": "\uE9F4", "mail": "\uE158", "lock": "\uE897", "cert": "\uEF76",
-    "shield": "\uE9E0", "wrench": "\uE869", "gear": "\uE8B8", "monitor": "\uE30C",
-    "cart": "\uE8CC", "mobile": "\uE32C", "code": "\uE86F", "person": "\uE7FD",
+    "globe": "\uE80B", "cloud": "\uF15C", "server": "\uE875", "rack": "\uEB2F",
+    "network": "\uE9F4", "mail": "\uE159", "lock": "\uE899", "cert": "\uEF76",
+    "shield": "\uE9E0", "wrench": "\uF8CD", "gear": "\uE8B8", "monitor": "\uE30C",
+    "cart": "\uE8CC", "mobile": "\uE7BA", "code": "\uE86F", "person": "\uF0D3",
     "people": "\uF233", "storage": "\uE1DB", "bolt": "\uEA0B", "sync": "\uE627",
-    "pulse": "\uEAA2", "check": "\uE86C", "phone": "\uE0B0",
-    "quote": "\uE244", "star": "\uE885", "idea": "\uE0F0",
-    "arrow": "\uE5C8", "location": "\uE0C8", "tick": "\uE5CA",
+    "pulse": "\uEAA2", "check": "\uF0BE", "phone": "\uF0D4",
+    "quote": "\uE244", "star": "\uF09A", "idea": "\uE90F",
+    "arrow": "\uE5C8", "location": "\uF1DB", "tick": "\uE668",
 }
 
 # Palabras clave de peso que, si aparecen en el nombre de la fuente, hacen que la
