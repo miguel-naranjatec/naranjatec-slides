@@ -85,3 +85,72 @@ def test_add_solution_highlight_anade_una_forma():
     sin = s.add_solution(_prs(), "S", [_punto()] * 3, _imgs())
     con = s.add_solution(_prs(), "S", [_punto()] * 3, _imgs(), highlight=1)
     assert len(con.shapes) == len(sin.shapes) + 1
+
+
+# --- add_stats_feature ----------------------------------------------------
+
+def _stat(v="+22"):
+    return {"value": v, "label": "una etiqueta corta", "icon": T.ICON["shield"]}
+
+
+def test_add_stats_feature_admite_de_dos_a_cuatro():
+    for n in (2, 3, 4):
+        slide = s.add_stats_feature(_prs(), "Cifras", [_stat()] * n,
+                                    T.img("ecco-working.jpg"))
+        assert slide is not None
+
+
+def test_add_stats_feature_con_cinco_lanza():
+    with pytest.raises(ValueError, match="entre 2 y 4"):
+        s.add_stats_feature(_prs(), "Cifras", [_stat()] * 5,
+                            T.img("ecco-working.jpg"))
+
+
+def test_ninguna_caja_con_medida_no_positiva():
+    # Un alto negativo produce un .pptx que PowerPoint se niega a abrir, y
+    # python-pptx no se queja. Este es el caso que lo destapo.
+    slide = s.add_stats_feature(_prs(), "Cifras", [_stat()] * 4,
+                                T.img("ecco-working.jpg"),
+                                subtitle="Con subtitulo, que es el caso justo")
+    for sp in slide.shapes:
+        assert int(sp.height) > 0
+        assert int(sp.width) > 0
+
+
+def test_check_box_lanza_con_medidas_no_positivas():
+    with pytest.raises(ValueError, match="caja invalida"):
+        s._check_box(s.Inches(2), s.Inches(-0.5), "prueba")
+    with pytest.raises(ValueError, match="caja invalida"):
+        s._check_box(0, s.Inches(1), "prueba")
+
+
+# --- add_next_steps -------------------------------------------------------
+
+def _paso():
+    return ("Titular", "Texto corto.", T.ICON["check"])
+
+
+def test_add_next_steps_admite_de_tres_a_cinco():
+    for n in (3, 4, 5):
+        slide = s.add_next_steps(_prs(), "Pasos", [_paso()] * n)
+        assert slide is not None
+
+
+def test_add_next_steps_con_dos_lanza():
+    with pytest.raises(ValueError, match="entre 3 y 5"):
+        s.add_next_steps(_prs(), "Pasos", [_paso()] * 2)
+
+
+def test_add_next_steps_con_seis_lanza():
+    with pytest.raises(ValueError, match="entre 3 y 5"):
+        s.add_next_steps(_prs(), "Pasos", [_paso()] * 6)
+
+
+def test_add_next_steps_pinta_un_arco_y_una_punta_por_hueco():
+    # n pasos -> n-1 arcos (formas libres, custGeom) y n-1 puntas (triangulos).
+    for n in (3, 4, 5):
+        slide = s.add_next_steps(_prs(), "Pasos", [_paso()] * n)
+        xml = slide.shapes._spTree.xml
+        # OJO: "custGeom" aparece dos veces por forma (apertura y cierre).
+        assert xml.count("<a:custGeom>") == n - 1, "arcos con n=%d" % n
+        assert xml.count('prst="triangle"') == n - 1, "puntas con n=%d" % n

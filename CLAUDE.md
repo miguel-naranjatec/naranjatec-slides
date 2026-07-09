@@ -136,7 +136,13 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
   Mensaje destacado a 3 columnas: antetitulo + titular + firma izq, foto vertical
   a sangre en el centro (con comillas doradas grandes), entradilla en negrita
   (`lead`) + cuerpo (`body`: str o lista) dcha.
-- `add_spotlight(prs, title, body, image, cta="", page, section)`
+- `add_next_steps(prs, title, steps, subtitle="", page, section)`
+  Proximos pasos: 3-5 circulos (alternan navy relleno / blanco) unidos por arcos
+  elipticos que alternan arriba y abajo, con punta de flecha; debajo, numero,
+  titular y descripcion. `steps`: `[(titular, texto, glyph)]`. Fuera de 3-5 ->
+  `ValueError`. Los arcos son formas libres (`_arc_band`): python-pptx no tiene
+  arco grueso.
+- `add_spotlight(prs, title, body, image, cta="", price=None, page, section)`
   Extra destacado: foto grande dcha + panel navy izq que la solapa, con titulo,
   parrafos y boton blanco con flecha. `body`: str o lista. `cta`: texto del boton.
 

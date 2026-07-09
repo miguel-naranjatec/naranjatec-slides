@@ -20,6 +20,7 @@ Funciones publicas principales:
     add_cta(...)           cierre con llamada a la accion
 """
 
+import math
 from pathlib import Path
 
 from PIL import Image, ImageFont
@@ -2474,4 +2475,144 @@ def add_stats_feature(prs, title, stats, image, subtitle="", page=None,
 
     # El numero de pagina cae sobre la foto: en blanco, no en gris.
     _white_pagenum(slide, page)
+    return slide
+
+
+def _arc_band(slide, cx, cy, rx, ry, thick, arriba, color, t0=0.0, pasos=48):
+    """Arco grueso (media luna) dibujado como forma libre.
+
+    python-pptx no ofrece un arco con grosor: MSO_SHAPE.ARC es solo linea y sus
+    ajustes son angulos crudos. Aqui se construye el poligono entre dos radios
+    y se rellena, que da un trazo limpio y controlable.
+
+    Es una ELIPSE (rx != ry): con pocos pasos, los circulos quedan lejos y un
+    arco circular se subiria hasta el titulo. `ry` topa esa altura.
+    `t0` (radianes) recorta ambos extremos, para que el arco muera en el BORDE
+    del circulo siguiente y no en su centro, donde la punta quedaria tapada.
+    Devuelve (x, y) del extremo derecho.
+    """
+    signo = -1.0 if arriba else 1.0
+    h = thick / 2.0
+    ang = [math.pi - t0 - (math.pi - 2 * t0) * i / pasos for i in range(pasos + 1)]
+    puntos = [((cx + (rx + h) * math.cos(t)), cy + signo * (ry + h) * math.sin(t))
+              for t in ang]
+    puntos += [((cx + (rx - h) * math.cos(t)), cy + signo * (ry - h) * math.sin(t))
+               for t in reversed(ang)]
+
+    x0, y0 = puntos[0]
+    ff = slide.shapes.build_freeform(Emu(int(x0)), Emu(int(y0)))
+    ff.add_line_segments([(Emu(int(x)), Emu(int(y))) for x, y in puntos[1:]],
+                         close=True)
+    sp = ff.convert_to_shape()
+    sp.fill.solid()
+    sp.fill.fore_color.rgb = color
+    sp.line.fill.background()
+    sp.shadow.inherit = False
+    return (cx + rx * math.cos(t0), cy + signo * ry * math.sin(t0))
+
+
+def _arc_t0(rx, ry, dist):
+    """Angulo al que el arco elipse dista `dist` del centro del circulo destino
+    (que esta en t=0). Se resuelve por biseccion: no hay forma cerrada."""
+    def d(t):
+        dx = rx * (math.cos(t) - 1.0)
+        dy = ry * math.sin(t)
+        return math.hypot(dx, dy)
+    lo, hi = 0.0, math.pi / 2.0
+    for _ in range(40):
+        mid = (lo + hi) / 2.0
+        if d(mid) < dist:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2.0
+
+
+def _arrow_head(slide, x, y, size, color, rotation):
+    """Punta de flecha (triangulo) para cerrar un `_arc_band`."""
+    sp = _rect(slide, Emu(int(x - size / 2)), Emu(int(y - size / 2)),
+               Emu(int(size)), Emu(int(size)), fill=color,
+               shape=MSO_SHAPE.ISOSCELES_TRIANGLE)
+    sp.rotation = rotation
+    return sp
+
+
+def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
+    """Proximos pasos: flujo serpenteante de 3 a 5 circulos unidos por arcos que
+    alternan arriba y abajo, con numero, titular y descripcion debajo.
+
+    steps: [(titular, texto, glyph)]. Los circulos alternan navy relleno (icono
+    dorado) y blanco con borde navy (icono navy), como en la referencia.
+    """
+    if not 3 <= len(steps) <= 5:
+        raise ValueError(
+            "add_next_steps: %d pasos; admite entre 3 y 5." % len(steps))
+
+    slide = _slide(prs)
+    _topbar(slide, section)
+    tb = _title(slide, title, y=Inches(1.35))
+    if subtitle:
+        _text(slide, MARGIN, Emu(int(tb) + int(Inches(0.1))), Inches(9.0),
+              Inches(0.5),
+              [[(subtitle, {"size": Pt(14), "italic": True,
+                            "color": T.GRIS_SUAVE,
+                            "font": T.FONT_TITLE_EMPH})]])
+
+    n = len(steps)
+    col_w = int(CONTENT_W) // n
+    cy = int(Inches(3.55))
+    r = int(Inches(0.62))
+    thick = int(Inches(0.085))
+    head = int(Inches(0.26))
+
+    # Arcos primero: van por debajo de los circulos.
+    for i in range(n - 1):
+        cx_a = int(MARGIN) + i * col_w + col_w // 2
+        cx_b = cx_a + col_w
+        arriba = (i % 2 == 0)
+        mid = (cx_a + cx_b) // 2
+        rad = (cx_b - cx_a) / 2.0
+        color = T.GRIS_BORDE if arriba else T.AZUL_OSCURO
+        rx = (cx_b - cx_a) / 2.0
+        ry = min(rx, float(int(Inches(1.05))))   # altura topada: ver _arc_band
+        t0 = _arc_t0(rx, ry, r + int(Inches(0.06)))
+        ex, ey = _arc_band(slide, mid, cy, rx, ry, thick, arriba, color, t0=t0)
+        # Tangente de la ELIPSE en el extremo: el triangulo apunta al circulo.
+        dx, dy = rx * math.sin(t0), ry * math.cos(t0)
+        rot = math.degrees(math.atan2(dx, -dy if arriba else dy))
+        _arrow_head(slide, ex, ey, head, color, rot)
+
+    for i, st in enumerate(steps):
+        head_txt, text, glyph = (list(st) + [T.ICON["check"]])[:3]
+        cx = int(MARGIN) + i * col_w + col_w // 2
+        relleno = (i % 2 == 1)
+        if relleno:
+            _rect(slide, Emu(cx - r), Emu(cy - r), Emu(2 * r), Emu(2 * r),
+                  fill=T.AZUL_OSCURO, shape=MSO_SHAPE.OVAL)
+            icon_col = T.AMARILLO
+        else:
+            circ = _rect(slide, Emu(cx - r), Emu(cy - r), Emu(2 * r), Emu(2 * r),
+                         fill=T.BLANCO, shape=MSO_SHAPE.OVAL)
+            _soft_shadow(circ, alpha=10000)
+            icon_col = T.AZUL_OSCURO
+        _icon(slide, Emu(cx - r), Emu(cy - r), Emu(2 * r), glyph,
+              color=icon_col, nudge=0.0)
+
+        tw = col_w - int(Inches(0.3))
+        tx = cx - tw // 2
+        ny = cy + r + int(Inches(0.55))
+        _text(slide, Emu(tx), Emu(ny), Emu(tw), Inches(0.55),
+              [[("%02d" % (i + 1), {"size": Pt(26), "bold": True,
+                                    "color": T.AZUL_OSCURO,
+                                    "font": T.FONT_NUM})]],
+              align=PP_ALIGN.CENTER)
+        _text(slide, Emu(tx), Emu(ny + int(Inches(0.6))), Emu(tw), Inches(0.4),
+              [[(head_txt, {"size": Pt(14), "color": T.AZUL_OSCURO,
+                            "font": T.FONT_HEAD})]], align=PP_ALIGN.CENTER)
+        _text(slide, Emu(tx), Emu(ny + int(Inches(1.05))), Emu(tw), Inches(0.9),
+              [[(text, {"size": Pt(11), "color": T.GRIS_SUAVE,
+                        "font": T.FONT_BODY})]], align=PP_ALIGN.CENTER,
+              line_spacing=1.3)
+
+    _pagenum(slide, page)
     return slide

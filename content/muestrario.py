@@ -503,6 +503,23 @@ def build(prs):
         page=n(),
     )
 
+    # 23f) PROXIMOS PASOS: flujo serpenteante (NUEVO)
+    s.add_next_steps(
+        prs,
+        "Proximos *pasos*",
+        [
+            ("Aprobacion", "Damos el visto bueno a la propuesta.",
+             T.ICON["check"]),
+            ("Descubrimiento", "Taller inicial y wireframes.", T.ICON["idea"]),
+            ("Desarrollo", "Construimos la web a medida.", T.ICON["code"]),
+            ("Contenidos", "Volcado, traduccion y QA.", T.ICON["storage"]),
+            ("Lanzamiento", "Publicacion, formacion y soporte.",
+             T.ICON["bolt"]),
+        ],
+        subtitle="De la firma al lanzamiento",
+        page=n(), section="SIGUIENTE",
+    )
+
     # 24) GRACIAS / CIERRE sobre foto (NUEVO)
     s.add_thanks(
         prs,
