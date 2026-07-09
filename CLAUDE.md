@@ -117,6 +117,11 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
   tarjeta); el total Y la nota al pie van solo en la ultima. Devuelve SIEMPRE una
   lista. `page` recibe el CONTADOR (`page=n`), no su valor (`page=n()`): unica
   excepcion de la libreria.
+- `add_stats_feature(prs, title, stats, image, subtitle="", page, section)`
+  Cifras destacadas: rejilla 2x2 de tarjetas (circulo de icono + cifra grande +
+  descripcion) izq y foto a sangre en la mitad dcha. `stats`:
+  `{"value","label","icon"}`, de 2 a 4. Version rica de `add_stats`, que sigue
+  existiendo para la banda de cifras sin foto.
 - `add_extras(prs, title, extras, subtitle="", page, section)`
   Productos adicionales: 2-4 tarjetas altas con foto + velo navy, icono, precio
   grande (con `+` delante), nombre y descripcion corta. `extras`:
@@ -171,6 +176,11 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
 
 - **PowerPoint bloquea el `.pptx` abierto**: al reconstruir da `PermissionError`.
   Solucion: cerrar el archivo, o guardar a una ruta temporal para verificar.
+- **Cajas de alto/ancho <= 0 corrompen el .pptx**: `python-pptx` las escribe sin
+  quejarse y luego PowerPoint dice "no puede abrir el archivo" (python-pptx si lo
+  abre, lo que despista). Suele venir de restar dos posiciones y que salga
+  negativo. `_rect` y `_text` llaman a `_check_box`, que revienta el build con la
+  medida culpable en pulgadas. NO desactivarlo.
 - **PowerPoint NO recarga solo**: tras regenerar, hay que cerrar y reabrir para ver
   los cambios (si el usuario "no ve" el cambio, suele ser esto o el bloqueo).
 - `add_bullets` pinta como maximo 4 items; `add_process` es 2x2 (4). Para mas

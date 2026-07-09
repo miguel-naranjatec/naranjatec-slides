@@ -141,8 +141,19 @@ def _slide(prs, bg=T.BG):
     return slide
 
 
+def _check_box(width, height, quien):
+    """python-pptx acepta anchos/altos negativos sin rechistar y produce un
+    .pptx que PowerPoint SE NIEGA a abrir. Mejor reventar el build."""
+    if int(width) <= 0 or int(height) <= 0:
+        raise ValueError(
+            "%s: caja invalida (ancho=%.3f in, alto=%.3f in). Una medida <= 0 "
+            "genera un .pptx que PowerPoint no puede abrir."
+            % (quien, int(width) / 914400.0, int(height) / 914400.0))
+
+
 def _rect(slide, left, top, width, height, fill=None, line=None,
           line_w=Pt(1), shape=MSO_SHAPE.RECTANGLE, radius=None):
+    _check_box(width, height, "_rect")
     sp = slide.shapes.add_shape(shape, left, top, width, height)
     if radius is not None and shape == MSO_SHAPE.ROUNDED_RECTANGLE:
         try:
@@ -171,6 +182,7 @@ def _text(slide, left, top, width, height, runs, align=PP_ALIGN.LEFT,
     leading natural de la fuente. Da un interlineado predecible y compacto en los
     titulos (p.ej. line_h=1.2) y permite calcular la altura del bloque sin
     depender de las metricas internas de cada fuente."""
+    _check_box(width, height, "_text")
     box = slide.shapes.add_textbox(left, top, width, height)
     tf = box.text_frame
     tf.word_wrap = True
@@ -2384,4 +2396,82 @@ def add_spotlight(prs, title, body, image, cta="", price=None, page=None,
               color=T.AZUL)
 
     _pagenum(slide, page)
+    return slide
+
+
+def add_stats_feature(prs, title, stats, image, subtitle="", page=None,
+                      section=""):
+    """Cifras destacadas: rejilla 2x2 de tarjetas a la izquierda y foto a sangre
+    ocupando la mitad derecha.
+
+    stats: [{"value": "+350", "label": "proyectos", "icon": glyph}]. De 2 a 4.
+    Cada tarjeta lleva un circulo de icono, la cifra grande y una descripcion
+    corta. Es la version rica de `add_stats`, que sigue existiendo para cuando
+    no hay foto ni descripcion por cifra.
+    """
+    if not 2 <= len(stats) <= 4:
+        raise ValueError(
+            "add_stats_feature: %d cifras; admite entre 2 y 4." % len(stats))
+
+    slide = _slide(prs)
+
+    # Foto a sangre: mitad derecha, de borde a borde.
+    img_x = int(Inches(7.75))
+    _img(slide, image, Emu(img_x), 0, Emu(int(T.SLIDE_W) - img_x), T.SLIDE_H,
+         radius=0.0)
+
+    _topbar(slide, section)
+    col_w = img_x - int(MARGIN) - int(Inches(0.6))
+    tb = _title(slide, title, y=Inches(1.35), width=Emu(col_w))
+    top = max(int(Inches(2.3)), int(tb) + int(GAP_AFTER_TITLE))
+    if subtitle:
+        _text(slide, MARGIN, Emu(int(tb) + int(Inches(0.1))), Emu(col_w),
+              Inches(0.5),
+              [[(subtitle, {"size": Pt(14), "italic": True,
+                            "color": T.GRIS_SUAVE,
+                            "font": T.FONT_TITLE_EMPH})]])
+        top += int(Inches(0.4))
+
+    # La tarjeta tiene que dar de si para circulo + cifra + etiqueta. Con dos
+    # filas, el hueco util manda: por eso el margen inferior aqui es 0.5in.
+    bottom = int(T.SLIDE_H) - int(Inches(0.5))
+    n = len(stats)
+    cols = 2 if n > 1 else 1
+    rows = (n + cols - 1) // cols
+    gap = int(Inches(0.2))
+    card_w = (col_w - (cols - 1) * gap) // cols
+    card_h = min(int(Inches(2.4)), (bottom - top - (rows - 1) * gap) // rows)
+    grid_top = top + ((bottom - top) - (rows * card_h + (rows - 1) * gap)) // 2
+
+    pad = int(Inches(0.26))
+    badge = int(Inches(0.66))
+    vgap = int(Inches(0.08))
+    value_h = int(Inches(0.52))
+    for i, st in enumerate(stats):
+        r, c = divmod(i, cols)
+        x = int(MARGIN) + c * (card_w + gap)
+        y = grid_top + r * (card_h + gap)
+        card = _rect(slide, Emu(x), Emu(y), Emu(card_w), Emu(card_h),
+                     fill=T.BLANCO, shape=MSO_SHAPE.ROUNDED_RECTANGLE,
+                     radius=0.06)
+        _soft_shadow(card, alpha=11000)
+
+        _rect(slide, Emu(x + pad), Emu(y + pad), Emu(badge), Emu(badge),
+              fill=T.AZUL_OSCURO, shape=MSO_SHAPE.OVAL)
+        _icon(slide, Emu(x + pad), Emu(y + pad), Emu(badge),
+              st.get("icon", T.ICON["bolt"]), color=T.AMARILLO, nudge=0.0)
+
+        tw = card_w - 2 * pad
+        vy = y + pad + badge + vgap
+        _text(slide, Emu(x + pad), Emu(vy), Emu(tw), Emu(value_h),
+              [[(st["value"], {"size": Pt(32), "bold": True,
+                               "color": T.AZUL_OSCURO, "font": T.FONT_NUM})]])
+        ly = vy + value_h + int(Inches(0.06))
+        label_h = max(int(Inches(0.24)), y + card_h - pad - ly)
+        _text(slide, Emu(x + pad), Emu(ly), Emu(tw), Emu(label_h),
+              [[(st["label"], {"size": Pt(11.5), "color": T.GRIS_SUAVE,
+                               "font": T.FONT_BODY})]], line_spacing=1.25)
+
+    # El numero de pagina cae sobre la foto: en blanco, no en gris.
+    _white_pagenum(slide, page)
     return slide

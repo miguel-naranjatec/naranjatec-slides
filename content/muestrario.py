@@ -150,7 +150,27 @@ def build(prs):
         section="Ejemplo",
     )
 
-    # 11) CIFRAS DESTACADAS
+    # 11) CIFRAS DESTACADAS (rejilla 2x2 + foto a sangre)
+    s.add_stats_feature(
+        prs,
+        "Cifras destacadas",
+        [
+            {"value": "+22", "label": "anos levantando la tecnologia de PYMEs.",
+             "icon": T.ICON["shield"]},
+            {"value": "+350", "label": "proyectos entregados y en marcha.",
+             "icon": T.ICON["cert"]},
+            {"value": "98%", "label": "de clientes que renuevan cada ano.",
+             "icon": T.ICON["people"]},
+            {"value": "24/7", "label": "soporte y monitorizacion continua.",
+             "icon": T.ICON["pulse"]},
+        ],
+        image=T.img("ecco-working.jpg"),
+        subtitle="Los numeros que nos avalan",
+        page=n(),
+        section="Ejemplo",
+    )
+
+    # 11b) CIFRAS en banda (add_stats, la version sin foto que usa Nereidas)
     s.add_stats(
         prs,
         [
@@ -158,8 +178,8 @@ def build(prs):
             {"value": "98%", "label": "clientes que renuevan"},
             {"value": "24/7", "label": "soporte y monitorizacion"},
         ],
-        title="Cifras destacadas",
-        subtitle="Los numeros que nos avalan",
+        title="Cifras en banda",
+        subtitle="Version sobria, sin foto",
         page=n(),
         section="Ejemplo",
     )
