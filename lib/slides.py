@@ -2231,18 +2231,22 @@ def add_solution(prs, title, points, images, subtitle="", highlight=None,
     for i, pt in enumerate(points):
         head, text, glyph = (list(pt) + [T.ICON["check"]])[:3]
         y = band_top + i * row_h
-        if highlight is not None and i == highlight:
-            card = _rect(slide, Emu(cx - int(Inches(0.3))),
-                         Emu(y + int(Inches(0.05))),
-                         Emu(cw + int(Inches(0.3))), Emu(row_h - int(Inches(0.1))),
-                         fill=T.BLANCO, shape=MSO_SHAPE.ROUNDED_RECTANGLE,
-                         radius=0.5)
-            _soft_shadow(card, alpha=13000)
+        destacado = highlight is not None and i == highlight
+        if destacado:
+            # Pildora amarilla plana: sin sombra. El color ya la levanta.
+            _rect(slide, Emu(cx - int(Inches(0.3))), Emu(y + int(Inches(0.05))),
+                  Emu(cw + int(Inches(0.3))), Emu(row_h - int(Inches(0.1))),
+                  fill=T.AMARILLO, shape=MSO_SHAPE.ROUNDED_RECTANGLE,
+                  radius=0.5)
+        # Sobre amarillo: el icono dorado se fundiria con el fondo -> blanco; y
+        # el detalle en GRIS_SUAVE pierde contraste -> GRIS_TEXTO.
+        icon_col = T.BLANCO if destacado else T.AMARILLO
+        desc_col = T.GRIS_TEXTO if destacado else T.GRIS_SUAVE
         by2 = y + (row_h - badge) // 2
         _rect(slide, Emu(cx), Emu(by2), Emu(badge), Emu(badge),
               fill=T.AZUL_OSCURO, shape=MSO_SHAPE.OVAL)
         # nudge=0: dentro de un circulo el icono se centra optico con la caja.
-        _icon(slide, Emu(cx), Emu(by2), Emu(badge), glyph, color=T.AMARILLO,
+        _icon(slide, Emu(cx), Emu(by2), Emu(badge), glyph, color=icon_col,
               nudge=0.0)
         # Titular + descripcion como UNA caja de dos parrafos, anclada al medio
         # de la altura del circulo. Es el mismo patron que add_gallery_list: da
@@ -2252,7 +2256,7 @@ def add_solution(prs, title, points, images, subtitle="", highlight=None,
         runs = [[(head, {"size": Pt(15.5), "color": T.AZUL_OSCURO,
                          "font": T.FONT_HEAD})]]
         if text:
-            runs.append([(text, {"size": Pt(11.5), "color": T.GRIS_SUAVE,
+            runs.append([(text, {"size": Pt(11.5), "color": desc_col,
                                  "font": T.FONT_BODY})])
         _text(slide, Emu(tx), Emu(by2), Emu(tw), Emu(badge), runs,
               anchor=MSO_ANCHOR.MIDDLE, line_spacing=1.12, space_after=Pt(3))
