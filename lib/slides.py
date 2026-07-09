@@ -1351,6 +1351,19 @@ def _letter_badge(slide, x, y, size, letter, color=None):
           align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
 
 
+def _num_badge(slide, x, y, size, num):
+    """Circulo RELLENO navy con un ordinal dorado (filas de add_pricing).
+
+    Distinto de _letter_badge, que es de contorno y usa el color del trazo para
+    el texto.
+    """
+    _rect(slide, x, y, size, size, fill=T.AZUL_OSCURO, shape=MSO_SHAPE.OVAL)
+    _text(slide, x, y, size, size,
+          [[(num, {"size": Pt(12), "bold": True, "color": T.AMARILLO,
+                   "font": T.FONT_NUM})]],
+          align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+
+
 def _image_grid(slide, images, x, y, w, h, cols, rows, gap=Inches(0.1), radius=0.0):
     """Rejilla de imagenes (cover) en una region dada."""
     cw = Emu((int(w) - (cols - 1) * int(gap)) // cols)
@@ -1917,7 +1930,57 @@ def _pricing_page(prs, title, rows, ordinal, subtitle, section, page,
     no final): las filas ocupan todo el ancho."""
     slide = _slide(prs)
     _topbar(slide, section)
-    _title(slide, title, y=Inches(1.35))
+    tb = _title(slide, title, y=Inches(1.35))
+    top = max(int(Inches(2.5)), int(tb) + int(GAP_AFTER_TITLE))
+    if subtitle:
+        _text(slide, MARGIN, Emu(int(tb) + int(Inches(0.1))), Inches(9.0),
+              Inches(0.5),
+              [[(subtitle, {"size": Pt(14), "italic": True,
+                            "color": T.GRIS_SUAVE,
+                            "font": T.FONT_TITLE_EMPH})]])
+        top += int(Inches(0.45))
+
+    bottom = int(Inches(6.3)) if note else int(Inches(6.6))
+    block_h = bottom - top
+
+    con_total = texto_total is not None
+    gap_col = int(Inches(0.5))
+    rows_w = int(0.60 * int(CONTENT_W)) if con_total else int(CONTENT_W)
+
+    # Alto de fila topado: sin el tope, una sola partida ocuparia todo el hueco.
+    # El bloque resultante se centra verticalmente entre `top` y `bottom`.
+    k = len(rows)
+    gap_r = int(Inches(0.18))
+    row_h = min(ROW_H_MAX, (block_h - (k - 1) * gap_r) // k)
+    used_h = k * row_h + (k - 1) * gap_r
+    rows_top = top + (block_h - used_h) // 2
+
+    badge = int(Inches(0.34))
+    pad = int(Inches(0.28))
+    amount_w = int(Inches(2.3))
+    concept_x = int(MARGIN) + pad + badge + pad
+    concept_w = int(MARGIN) + rows_w - amount_w - int(Inches(0.5)) - concept_x
+
+    for i, (concepto, importe) in enumerate(rows):
+        y = rows_top + i * (row_h + gap_r)
+        card = _rect(slide, MARGIN, Emu(y), Emu(rows_w), Emu(row_h),
+                     fill=T.BLANCO, shape=MSO_SHAPE.ROUNDED_RECTANGLE,
+                     radius=0.06)
+        _soft_shadow(card, alpha=10000)
+        _num_badge(slide, Emu(int(MARGIN) + pad),
+                   Emu(y + (row_h - badge) // 2), Emu(badge),
+                   "%d" % (ordinal + i))
+        _text(slide, Emu(concept_x), Emu(y), Emu(concept_w), Emu(row_h),
+              [[(concepto, {"size": Pt(14.5), "color": T.AZUL_OSCURO,
+                            "font": T.FONT_HEAD})]],
+              anchor=MSO_ANCHOR.MIDDLE)
+        _text(slide, Emu(int(MARGIN) + rows_w - amount_w - int(Inches(0.35))),
+              Emu(y), Emu(amount_w), Emu(row_h),
+              [[(_fmt_eur(importe), {"size": Pt(15), "bold": True,
+                                     "color": T.AZUL_OSCURO,
+                                     "font": T.FONT_NUM})]],
+              align=PP_ALIGN.RIGHT, anchor=MSO_ANCHOR.MIDDLE)
+
     _pagenum(slide, page)
     return slide
 

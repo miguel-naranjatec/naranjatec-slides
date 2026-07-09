@@ -122,3 +122,27 @@ def test_add_pricing_total_numerico_lanza():
 def test_add_pricing_page_evaluado_lanza():
     with pytest.raises(TypeError, match="contador"):
         s.add_pricing(_prs(), "Inversion", _filas(3), page=7)
+
+
+def _textos(slide):
+    out = []
+    for sp in slide.shapes:
+        if sp.has_text_frame:
+            out.append(sp.text_frame.text)
+    return out
+
+
+def test_las_filas_pintan_concepto_e_importe_formateado():
+    slide = s.add_pricing(_prs(), "Inversion", [("Desarrollo", 2950)])[0]
+    textos = _textos(slide)
+    assert "Desarrollo" in textos
+    assert ("2.950 " + s.EURO) in textos
+
+
+def test_los_ordinales_continuan_en_la_segunda_pagina():
+    paginas = s.add_pricing(_prs(), "Inversion", _filas(7))
+    assert "1" in _textos(paginas[0])
+    assert "4" in _textos(paginas[0])
+    assert "5" in _textos(paginas[1])
+    assert "7" in _textos(paginas[1])
+    assert "5" not in _textos(paginas[0])
