@@ -7,6 +7,9 @@ consistente la paleta, la tipografia y el logo de la empresa.
 > Para asistentes de IA (Claude Code / Claude Cowork) hay un manual operativo
 > detallado en [`CLAUDE.md`](CLAUDE.md): catalogo de layouts, convenciones,
 > codificacion y gotchas.
+>
+> Para dar la herramienta a un companero de equipo, ver
+> [`DISTRIBUTION.md`](DISTRIBUTION.md).
 
 ## Empezar aqui
 
