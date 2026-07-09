@@ -1,0 +1,21 @@
+# Presentaciones generadas (se regeneran con build/build.py)
+output/
+
+# Zips de fuentes: los TTF ya estan sueltos en brand/assets/fonts/
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Temporales / editores / SO
+*.tmp
+*~
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
