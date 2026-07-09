@@ -2627,8 +2627,8 @@ def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
     # Isotipo OPACO y nitido (alpha=100000, blur=0), mordiendo la esquina. Va al
     # final: se dibuja POR DELANTE del contenido. El numero de pagina se pinta
     # despues, para que no lo tape.
-    _decor(slide, Inches(-1.45), Inches(6.3), Inches(2.3), rotation=-14,
-           alpha=100000, blur=0)
+    _decor(slide, Inches(-6.9), Inches(5.15), Inches(8.4), rotation=-14,
+           alpha=100000, blur=42000)
 
     _pagenum(slide, page)
     return slide
