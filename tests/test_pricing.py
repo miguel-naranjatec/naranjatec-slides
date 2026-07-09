@@ -76,3 +76,49 @@ def test_split_rows_conserva_el_orden():
     paginas = s._split_rows(_filas(7))
     juntas = paginas[0] + paginas[1]
     assert juntas == _filas(7)
+
+
+def _prs():
+    return s.new_presentation()
+
+
+def test_add_pricing_devuelve_lista_incluso_con_una_pagina():
+    out = s.add_pricing(_prs(), "Inversion", _filas(3))
+    assert isinstance(out, list)
+    assert len(out) == 1
+
+
+def test_add_pricing_dos_paginas_con_siete_partidas():
+    out = s.add_pricing(_prs(), "Inversion", _filas(7))
+    assert len(out) == 2
+
+
+def test_add_pricing_invoca_el_contador_una_vez_por_pagina():
+    llamadas = []
+
+    def contador():
+        llamadas.append(len(llamadas) + 1)
+        return len(llamadas)
+
+    s.add_pricing(_prs(), "Inversion", _filas(7), page=contador)
+    assert llamadas == [1, 2]
+
+
+def test_add_pricing_rows_vacia_lanza():
+    with pytest.raises(ValueError, match="vacia"):
+        s.add_pricing(_prs(), "Inversion", [])
+
+
+def test_add_pricing_mas_de_diez_lanza_en_vez_de_truncar():
+    with pytest.raises(ValueError, match="maximo"):
+        s.add_pricing(_prs(), "Inversion", _filas(11))
+
+
+def test_add_pricing_total_numerico_lanza():
+    with pytest.raises(TypeError, match="None o str"):
+        s.add_pricing(_prs(), "Inversion", _filas(3), total=5530)
+
+
+def test_add_pricing_page_evaluado_lanza():
+    with pytest.raises(TypeError, match="contador"):
+        s.add_pricing(_prs(), "Inversion", _filas(3), page=7)

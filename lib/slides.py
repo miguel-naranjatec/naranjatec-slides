@@ -1909,3 +1909,61 @@ def add_product(prs, title, stat, kicker, rows, page=None, section=""):
                                      "font": T.FONT_BODY})]], line_spacing=1.25)
     _pagenum(slide, page)
     return slide
+
+
+def _pricing_page(prs, title, rows, ordinal, subtitle, section, page,
+                  texto_total, note):
+    """Pinta UNA pagina del desglose. texto_total=None -> sin tarjeta (pagina
+    no final): las filas ocupan todo el ancho."""
+    slide = _slide(prs)
+    _topbar(slide, section)
+    _title(slide, title, y=Inches(1.35))
+    _pagenum(slide, page)
+    return slide
+
+
+def add_pricing(prs, title, rows, note="", total=None, subtitle="", page=None,
+                section=""):
+    """Desglose de presupuesto: partidas numeradas + tarjeta de total + nota.
+
+    rows  : [(concepto, importe)] con importe int/float. Maximo 10 partidas.
+    total : None -> se suma a partir de rows. Un str se pinta tal cual
+            ("A convenir"). NO acepta un numero: el total nunca debe poder
+            contradecir al desglose.
+    page  : el CONTADOR, no su valor. page=n, no page=n(). Se invoca una vez
+            por pagina generada.
+
+    MULTIPAGINA: con 6-10 partidas genera dos diapositivas (la primera a ancho
+    completo, sin tarjeta) y el total va en la ultima. Devuelve SIEMPRE la lista
+    de slides, tenga una o dos.
+    """
+    if not rows:
+        raise ValueError("add_pricing: 'rows' no puede estar vacia")
+    if len(rows) > MAX_PRICING_ROWS:
+        raise ValueError(
+            "add_pricing: %d partidas; el maximo es %d. Agrupa partidas o usa "
+            "dos diapositivas: no se truncan en silencio."
+            % (len(rows), MAX_PRICING_ROWS))
+    if total is not None and not isinstance(total, str):
+        raise TypeError(
+            "add_pricing: 'total' debe ser None o str (p.ej. 'A convenir'); "
+            "los importes se suman a partir de 'rows'")
+    if page is not None and not callable(page):
+        raise TypeError(
+            "add_pricing: 'page' debe ser el contador (page=n), no su valor "
+            "(page=n())")
+
+    rows = [tuple(r) for r in rows]
+    texto_total = total if total is not None else _fmt_eur(sum(r[1] for r in rows))
+    paginas = _split_rows(rows)
+    slides = []
+    ordinal = 1
+    for i, chunk in enumerate(paginas):
+        ultima = (i == len(paginas) - 1)
+        slides.append(_pricing_page(
+            prs, title, chunk, ordinal=ordinal, subtitle=subtitle,
+            section=section, page=(page() if page is not None else None),
+            texto_total=(texto_total if ultima else None),
+            note=(note if ultima else "")))
+        ordinal += len(chunk)
+    return slides
