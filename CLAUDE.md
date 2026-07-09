@@ -108,6 +108,14 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
 - `add_product(prs, title, stat, kicker, rows, page, section)`
   Titulo + cifra + kicker izq; filas titulo/imagen/parrafo dcha.
   `rows`: `[{"head","text","image","desc"}]`.
+- `add_pricing(prs, title, rows, note="", total=None, subtitle="", page=n, section="")`
+  Desglose de presupuesto: partidas numeradas + importe, tarjeta de total amarilla
+  y nota al pie. `rows`: `[(concepto, importe)]`, importe numerico, **MAXIMO 10**
+  (mas -> `ValueError`, NO trunca como `add_bullets`). El total se SUMA solo;
+  `total=` solo acepta un `str` para forzar texto ("A convenir").
+  **MULTIPAGINA**: con 6-10 partidas genera 2 slides (la 1a a ancho completo, sin
+  tarjeta) y devuelve SIEMPRE una lista. `page` recibe el CONTADOR (`page=n`), no
+  su valor (`page=n()`): unica excepcion de la libreria.
 
 ## Convenciones de contenido
 
@@ -125,6 +133,8 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
   aceptan.
 - Numero de pagina: usar un contador `n()` como en los ejemplos; los separadores de
   seccion y el timeline NO llevan `page`.
+- Excepciones de `page`: los separadores y `add_timeline` NO lo llevan;
+  `add_pricing` recibe la FUNCION contador (`page=n`), no su valor.
 
 ## Regla de codificacion (IMPORTANTE)
 
