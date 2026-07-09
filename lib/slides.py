@@ -2244,17 +2244,18 @@ def add_solution(prs, title, points, images, subtitle="", highlight=None,
         # nudge=0: dentro de un circulo el icono se centra optico con la caja.
         _icon(slide, Emu(cx), Emu(by2), Emu(badge), glyph, color=T.AMARILLO,
               nudge=0.0)
-        # Titular y texto como un bloque compacto, centrado con el circulo.
+        # Titular + descripcion como UNA caja de dos parrafos, anclada al medio
+        # de la altura del circulo. Es el mismo patron que add_gallery_list: da
+        # el gap minimo entre ambos y los centra con el badge.
         tx = cx + badge + int(Inches(0.3))
         tw = cx + cw - tx
-        head_h, gap_t, text_h = int(Inches(0.34)), int(Inches(0.04)), int(Inches(0.6))
-        cy0 = y + (row_h - (head_h + gap_t + text_h)) // 2
-        _text(slide, Emu(tx), Emu(cy0), Emu(tw), Emu(head_h),
-              [[(head, {"size": Pt(16), "color": T.AZUL_OSCURO,
-                        "font": T.FONT_HEAD})]])
-        _text(slide, Emu(tx), Emu(cy0 + head_h + gap_t), Emu(tw), Emu(text_h),
-              [[(text, {"size": Pt(11.5), "color": T.GRIS_SUAVE,
-                        "font": T.FONT_BODY})]], line_spacing=1.3)
+        runs = [[(head, {"size": Pt(15.5), "color": T.AZUL_OSCURO,
+                         "font": T.FONT_HEAD})]]
+        if text:
+            runs.append([(text, {"size": Pt(11.5), "color": T.GRIS_SUAVE,
+                                 "font": T.FONT_BODY})])
+        _text(slide, Emu(tx), Emu(by2), Emu(tw), Emu(badge), runs,
+              anchor=MSO_ANCHOR.MIDDLE, line_spacing=1.12, space_after=Pt(3))
 
     _pagenum(slide, page)
     return slide
