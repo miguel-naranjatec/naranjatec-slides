@@ -1981,6 +1981,39 @@ def _pricing_page(prs, title, rows, ordinal, subtitle, section, page,
                                      "font": T.FONT_NUM})]],
               align=PP_ALIGN.RIGHT, anchor=MSO_ANCHOR.MIDDLE)
 
+    # La tarjeta se alinea con el BLOQUE REAL de filas (rows_top/used_h), no con
+    # el hueco completo: si no, con pocas partidas quedaria descuadrada.
+    if con_total:
+        card_x = int(MARGIN) + rows_w + gap_col
+        card_w = int(CONTENT_W) - rows_w - gap_col
+        card = _rect(slide, Emu(card_x), Emu(rows_top), Emu(card_w),
+                     Emu(used_h), fill=T.AMARILLO,
+                     shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.08)
+        _soft_shadow(card, alpha=9000)
+        _text(slide, Emu(card_x), Emu(rows_top + int(Inches(0.5))), Emu(card_w),
+              Inches(0.4),
+              [[("TOTAL ESTIMADO", {"size": Pt(11), "color": T.AZUL_OSCURO,
+                                    "font": T.FONT_MONO, "spacing": 120})]],
+              align=PP_ALIGN.CENTER)
+        cifra_h = int(Inches(1.2))
+        _text(slide, Emu(card_x), Emu(rows_top + (used_h - cifra_h) // 2),
+              Emu(card_w), Emu(cifra_h),
+              [[(texto_total, {"size": Pt(38), "bold": True,
+                               "color": T.AZUL_OSCURO, "font": T.FONT_NUM})]],
+              align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+        _text(slide, Emu(card_x), Emu(rows_top + used_h - int(Inches(0.8))),
+              Emu(card_w), Inches(0.4),
+              [[("IVA no incluido", {"size": Pt(12), "italic": True,
+                                     "color": T.AZUL_OSCURO,
+                                     "font": T.FONT_TITLE_EMPH})]],
+              align=PP_ALIGN.CENTER)
+
+    if note:
+        _text(slide, MARGIN, Emu(bottom + int(Inches(0.25))), CONTENT_W,
+              Inches(0.6),
+              [[(note, {"size": Pt(10), "italic": True, "color": T.GRIS_SUAVE,
+                        "font": T.FONT_BODY})]], line_spacing=1.25)
+
     _pagenum(slide, page)
     return slide
 

@@ -146,3 +146,36 @@ def test_los_ordinales_continuan_en_la_segunda_pagina():
     assert "5" in _textos(paginas[1])
     assert "7" in _textos(paginas[1])
     assert "5" not in _textos(paginas[0])
+
+
+def test_el_total_se_suma_solo():
+    slide = s.add_pricing(_prs(), "Inversion",
+                          [("A", 1300), ("B", 2950), ("C", 1280)])[0]
+    assert ("5.530 " + s.EURO) in _textos(slide)
+
+
+def test_total_string_se_pinta_tal_cual():
+    slide = s.add_pricing(_prs(), "Inversion", _filas(2),
+                          total="A convenir")[0]
+    assert "A convenir" in _textos(slide)
+
+
+def test_la_tarjeta_de_total_solo_esta_en_la_ultima_pagina():
+    paginas = s.add_pricing(_prs(), "Inversion", _filas(7))
+    assert "TOTAL ESTIMADO" not in _textos(paginas[0])
+    assert "TOTAL ESTIMADO" in _textos(paginas[1])
+
+
+def test_la_nota_solo_esta_en_la_ultima_pagina():
+    paginas = s.add_pricing(_prs(), "Inversion", _filas(7),
+                            note="Precios sin IVA.")
+    assert "Precios sin IVA." not in _textos(paginas[0])
+    assert "Precios sin IVA." in _textos(paginas[1])
+
+
+def test_importes_negativos_restan_del_total():
+    slide = s.add_pricing(_prs(), "Inversion",
+                          [("Web", 1000), ("Descuento", -250)])[0]
+    textos = _textos(slide)
+    assert ("-250 " + s.EURO) in textos
+    assert ("750 " + s.EURO) in textos
