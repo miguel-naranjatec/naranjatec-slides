@@ -117,6 +117,23 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
   tarjeta); el total Y la nota al pie van solo en la ultima. Devuelve SIEMPRE una
   lista. `page` recibe el CONTADOR (`page=n`), no su valor (`page=n()`): unica
   excepcion de la libreria.
+- `add_extras(prs, title, extras, subtitle="", page, section)`
+  Productos adicionales: 2-4 tarjetas altas con foto + velo navy, icono, precio
+  grande (con `+` delante), nombre y descripcion corta. `extras`:
+  `{"price": 375, "name", "desc", "icon", "image"}`. `price` es NUMERICO (lo
+  formatea `_fmt_eur`); `image` es opcional (sin ella, tarjeta navy solida).
+  Fuera de 2-4 -> `ValueError`.
+- `add_solution(prs, title, points, images, subtitle="", highlight=None, page, section)`
+  Dos fotos solapadas izq + 2-4 puntos dcha (circulo de icono + titular + texto).
+  `points`: `[(titular, texto, glyph)]`. `highlight=i` eleva ese punto sobre una
+  pildora blanca. `images`: DOS rutas. Fuera de 2-4 puntos -> `ValueError`.
+- `add_message(prs, eyebrow, title, image, lead, body, author, role="", page, section)`
+  Mensaje destacado a 3 columnas: antetitulo + titular + firma izq, foto vertical
+  a sangre en el centro (con comillas doradas grandes), entradilla en negrita
+  (`lead`) + cuerpo (`body`: str o lista) dcha.
+- `add_spotlight(prs, title, body, image, cta="", page, section)`
+  Extra destacado: foto grande dcha + panel navy izq que la solapa, con titulo,
+  parrafos y boton blanco con flecha. `body`: str o lista. `cta`: texto del boton.
 
 ## Convenciones de contenido
 

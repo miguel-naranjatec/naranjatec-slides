@@ -126,12 +126,17 @@ output/                 Presentaciones generadas (no se versionan)
 
 ## Tipos de diapositiva
 
-`lib/slides.py` ofrece ~26 layouts: portada, indice, separadores, statement,
+`lib/slides.py` ofrece ~30 layouts: portada, indice, separadores, statement,
 vinetas, dos columnas, rejilla de servicios, proceso, texto+imagen, cifras,
 timeline (multipagina), comparativa, galerias, banda de features, mision, rejilla
-numerada, testimonio, valores, resumen, producto, desglose de presupuesto, hero,
+numerada, testimonio, valores, resumen, producto, desglose de presupuesto,
+productos adicionales, extra destacado, solucion, mensaje destacado, hero,
 cierres/CTA, etc. El catalogo completo con la firma de cada uno esta en
 [`CLAUDE.md`](CLAUDE.md).
+
+Algunos layouts se solapan A PROPOSITO: hay varias formas de contar lo mismo (tres
+maneras de citar, dos de listar servicios). Elige la que encaje con el contenido,
+no la primera que encuentres.
 
 Genera el catalogo visual con: `python build/build.py test`.
 

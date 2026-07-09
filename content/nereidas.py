@@ -242,7 +242,28 @@ def build(prs):
         section="El proyecto",
     )
 
-    # 15) CIERRE / CTA
+    # 15) AMPLIACIONES OPCIONALES
+    # Las dos del documento de propuesta: +2,5h y +1h, a 150 €/hora.
+    # Imagenes PLACEHOLDER: sustituir por capturas reales de la web nueva.
+    s.add_extras(
+        prs,
+        "Ampliaciones *opcionales*",
+        [
+            {"price": 375, "name": "Búsquedas guardadas",
+             "desc": "El comprador guarda su búsqueda y recibe por email las "
+                     "propiedades nuevas que encajan.",
+             "icon": T.ICON["mail"], "image": T.img("ecco-working.jpg")},
+            {"price": 150, "name": "Reseñas de Google",
+             "desc": "Las reseñas reales de la agencia, integradas en la web y "
+                     "actualizadas solas.",
+             "icon": T.ICON["star"], "image": T.img("accompany-meeting.jpg")},
+        ],
+        subtitle="Se contratan cuando quieras, sobre la web ya en marcha",
+        page=n(),
+        section="El proyecto",
+    )
+
+    # 16) CIERRE / CTA
     s.add_cta(
         prs,
         headline="Demos el *siguiente paso*",

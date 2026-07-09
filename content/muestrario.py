@@ -407,7 +407,83 @@ def build(prs):
         image=T.img("oficina/naranjatec_4273.jpg"),
     )
 
-    # 23) GRACIAS / CIERRE sobre foto (NUEVO)
+    # 23b) EXTRAS: productos adicionales en tarjetas altas (NUEVO)
+    s.add_extras(
+        prs,
+        "Ampliaciones *opcionales*",
+        [
+            {"price": 375, "name": "Busquedas guardadas",
+             "desc": "Alertas por email de nuevas propiedades.",
+             "icon": T.ICON["mail"], "image": T.img("ecco-working.jpg")},
+            {"price": 150, "name": "Resenas de Google",
+             "desc": "Integradas y actualizadas solas.",
+             "icon": T.ICON["star"], "image": T.img("ecco-office.jpg")},
+            {"price": 600, "name": "Panel de analitica",
+             "desc": "Que buscan y donde abandonan.",
+             "icon": T.ICON["pulse"], "image": T.img("ecco-night.jpg")},
+            {"price": 900, "name": "Portal del cliente",
+             "desc": "Acceso privado a documentacion.",
+             "icon": T.ICON["lock"], "image": T.img("accompany-meeting.jpg")},
+        ],
+        subtitle="Se contratan aparte, cuando quieras",
+        page=n(), section="EXTRAS",
+    )
+
+    # 23c) EXTRA DESTACADO: panel de color sobre foto (NUEVO)
+    s.add_spotlight(
+        prs,
+        "Mantenimiento *gestionado*",
+        [
+            "Nos ocupamos de las actualizaciones, las copias y la seguridad, "
+            "para que tu solo te ocupes de vender.",
+            "Incluye monitorizacion, parches y un informe mensual.",
+        ],
+        image=T.img("ecco-night.jpg"),
+        cta="LO QUIERO",
+        page=n(), section="EXTRA",
+    )
+
+    # 23d) SOLUCION: dos fotos solapadas + puntos, uno destacado (NUEVO)
+    s.add_solution(
+        prs,
+        "Nuestra *solucion*",
+        [
+            ("Rapida e indexable",
+             "Paginas propias de zona que posicionan en Google.",
+             T.ICON["bolt"]),
+            ("Buscador propio", "Separa tu cartera del feed generico.",
+             T.ICON["globe"]),
+            ("Cero friccion", "Panel lateral con la referencia ya cargada.",
+             T.ICON["idea"]),
+            ("Confianza", "Testimonios donde se decide la compra.",
+             T.ICON["shield"]),
+        ],
+        images=[T.img("imporaco-reuniones.jpg"), T.img("ecco-working.jpg")],
+        subtitle="Donde se tapa cada fuga",
+        highlight=1, page=n(), section="LA SOLUCION",
+    )
+
+    # 23e) MENSAJE DESTACADO a tres columnas (NUEVO)
+    s.add_message(
+        prs,
+        "Fundador",
+        "Un mensaje *personal*",
+        image=T.img("oficina/naranjatec_4273.jpg"),
+        lead="Llevamos 22 anos montando la tecnologia de las PYMEs que no "
+             "quieren depender de nadie.",
+        body=[
+            "Cuando una web se percibe premium, la agencia se percibe premium. "
+            "Por eso cuidamos la tipografia, el espacio y la fotografia tanto "
+            "como el codigo que hay debajo.",
+            "No entregamos una plantilla: entregamos un sistema que tu equipo "
+            "puede mantener sin llamarnos.",
+        ],
+        author="Miguel Angel",
+        role="Fundador de NaranjaTec",
+        page=n(),
+    )
+
+    # 24) GRACIAS / CIERRE sobre foto (NUEVO)
     s.add_thanks(
         prs,
         "Gracias por *tu atencion*",
