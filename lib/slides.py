@@ -527,6 +527,19 @@ def _fmt_eur(valor):
     return "%s%s %s" % ("-" if negativo else "", cuerpo, EURO)
 
 
+def _split_rows(rows):
+    """Reparte las partidas en paginas de ROWS_PER_PAGE o menos.
+
+    Con 5 o menos, una sola pagina. Con 6-10, dos paginas equilibradas
+    (7 -> 4+3), para que ninguna quede casi vacia.
+    """
+    n = len(rows)
+    if n <= ROWS_PER_PAGE:
+        return [list(rows)]
+    corte = (n + 1) // 2
+    return [list(rows[:corte]), list(rows[corte:])]
+
+
 def _title(slide, title, y=Inches(1.25), width=None, eyebrow=""):
     """Titulo de contenido limpio (sin barra), tipografia como jerarquia.
     Devuelve la Y inferior REAL del titulo (segun 1 o 2 lineas medidas) para que

@@ -47,3 +47,32 @@ def test_fmt_eur_cero_negativo_no_lleva_signo():
 def test_fmt_eur_acarreo_al_redondear_centimos():
     assert s._fmt_eur(1299.999) == "1.300 " + s.EURO
     assert s._fmt_eur(0.999) == "1 " + s.EURO
+
+
+def _filas(n):
+    return [("Partida %d" % i, 100 * i) for i in range(1, n + 1)]
+
+
+def test_split_rows_una_pagina_hasta_cinco():
+    for n in (1, 3, 5):
+        paginas = s._split_rows(_filas(n))
+        assert len(paginas) == 1
+        assert len(paginas[0]) == n
+
+
+def test_split_rows_dos_paginas_equilibradas():
+    assert [len(p) for p in s._split_rows(_filas(6))] == [3, 3]
+    assert [len(p) for p in s._split_rows(_filas(7))] == [4, 3]
+    assert [len(p) for p in s._split_rows(_filas(10))] == [5, 5]
+
+
+def test_split_rows_ninguna_pagina_excede_el_maximo():
+    for n in range(1, s.MAX_PRICING_ROWS + 1):
+        for pagina in s._split_rows(_filas(n)):
+            assert len(pagina) <= s.ROWS_PER_PAGE
+
+
+def test_split_rows_conserva_el_orden():
+    paginas = s._split_rows(_filas(7))
+    juntas = paginas[0] + paginas[1]
+    assert juntas == _filas(7)
