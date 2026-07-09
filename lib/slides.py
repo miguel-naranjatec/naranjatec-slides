@@ -317,10 +317,15 @@ def _decor(slide, x, y, size, rotation=0, alpha=14000, blur=120000):
     return pic
 
 
-def _icon(slide, x, y, size, glyph, color=T.AZUL_OSCURO):
+def _icon(slide, x, y, size, glyph, color=T.AZUL_OSCURO, align=PP_ALIGN.CENTER,
+          nudge=-0.04):
     """Dibuja un icono monolinea (T.FONT_ICON = Material Symbols Outlined 300) centrado
-    en la caja, con un pequeno nudge vertical (-4%) para el centrado optico."""
-    dy = int(round(int(size) * -0.04))
+    en la caja, con un pequeno nudge vertical (-4%) para el centrado optico.
+
+    align=PP_ALIGN.LEFT cuando el icono debe alinear su borde izquierdo con el
+    texto de debajo (chips y badges lo quieren centrado; una tarjeta, no).
+    nudge=0.0 dentro de un circulo: ahi el centro geometrico es el bueno."""
+    dy = int(round(int(size) * nudge))
     b = slide.shapes.add_textbox(x, Emu(int(y) + dy), size, size)
     tf = b.text_frame
     tf.word_wrap = False
@@ -330,7 +335,7 @@ def _icon(slide, x, y, size, glyph, color=T.AZUL_OSCURO):
     tf.margin_top = 0
     tf.margin_bottom = 0
     p = tf.paragraphs[0]
-    p.alignment = PP_ALIGN.CENTER
+    p.alignment = align
     r = p.add_run()
     r.text = glyph
     r.font.name = T.FONT_ICON
@@ -2117,14 +2122,14 @@ def add_extras(prs, title, extras, subtitle="", page=None, section=""):
     bottom = int(T.SLIDE_H) - int(Inches(0.6))
     card_h = bottom - top
     n = len(extras)
-    gap = int(Inches(0.35))
+    gap = int(Inches(0.2))
     card_w = (int(CONTENT_W) - (n - 1) * gap) // n
 
     # Icono arriba; nombre y descripcion anclados al pie; el precio ocupa el
     # hueco que queda entre ambos. Asi la tarjeta no depende de que el nombre
     # entre en una sola linea.
     pad = int(Inches(0.35))
-    icon_sz = int(Inches(1.0))   # _icon deriva el cuerpo: 26pt por pulgada
+    icon_sz = int(Inches(1.15))  # _icon deriva el cuerpo: 26pt por pulgada
     desc_h = int(Inches(0.75))
     name_h = int(Inches(0.5))
     for i, e in enumerate(extras):
@@ -2142,13 +2147,16 @@ def add_extras(prs, title, extras, subtitle="", page=None, section=""):
 
         ix = x + pad
         tw = card_w - 2 * pad
+        # align=LEFT: el icono alinea su borde izquierdo con el precio y el
+        # nombre. Centrado en su caja quedaria metido hacia dentro.
         _icon(slide, Emu(ix), Emu(top + pad), Emu(icon_sz),
-              e.get("icon", T.ICON["bolt"]), color=T.AMARILLO)
+              e.get("icon", T.ICON["bolt"]), color=T.AMARILLO,
+              align=PP_ALIGN.LEFT)
 
         desc_y = top + card_h - pad - desc_h
         name_y = desc_y - name_h - int(Inches(0.05))
-        price_top = top + pad + icon_sz + int(Inches(0.25))
-        price_h = max(int(Inches(0.6)), name_y - int(Inches(0.15)) - price_top)
+        price_top = top + pad + icon_sz + int(Inches(0.15))
+        price_h = max(int(Inches(0.55)), name_y - int(Inches(0.15)) - price_top)
 
         _text(slide, Emu(ix), Emu(price_top), Emu(tw), Emu(price_h),
               [[("+" + _fmt_eur(e["price"]),
@@ -2190,26 +2198,35 @@ def add_solution(prs, title, points, images, subtitle="", highlight=None,
               [[(subtitle, {"size": Pt(14), "italic": True,
                             "color": T.GRIS_SUAVE,
                             "font": T.FONT_TITLE_EMPH})]])
+        # El subtitulo ocupa sitio: bajar las fotos, como hacen add_extras y
+        # add_pricing. Sin esto arrancaban donde arrancarian sin subtitulo.
+        top += int(Inches(0.55))
 
     # Fotos: la segunda desplazada abajo-derecha, con reborde claro que separa.
-    a_w, a_h = int(Inches(3.5)), int(Inches(2.9))
-    b_w, b_h = int(Inches(3.1)), int(Inches(2.6))
+    # radius=0.045 es el redondeo por defecto de _img y el que usa el resto del
+    # deck: no inventar uno propio aqui.
+    # Con subtitulo, top baja a ~2.9in y solo quedan 4.0in hasta el margen
+    # inferior (6.9in): la segunda foto tiene que caber ahi.
+    a_w, a_h = int(Inches(3.5)), int(Inches(2.6))
+    b_w, b_h = int(Inches(3.0)), int(Inches(2.45))
     ax, ay = int(MARGIN), top
-    bx, by = ax + int(Inches(1.85)), ay + int(Inches(1.75))
-    _img(slide, images[0], Emu(ax), Emu(ay), Emu(a_w), Emu(a_h), radius=0.07)
+    bx, by = ax + int(Inches(1.85)), ay + int(Inches(1.55))
+    _img(slide, images[0], Emu(ax), Emu(ay), Emu(a_w), Emu(a_h))
     ring = int(Inches(0.09))
     _rect(slide, Emu(bx - ring), Emu(by - ring), Emu(b_w + 2 * ring),
           Emu(b_h + 2 * ring), fill=T.BG, shape=MSO_SHAPE.ROUNDED_RECTANGLE,
-          radius=0.07)
-    _img(slide, images[1], Emu(bx), Emu(by), Emu(b_w), Emu(b_h), radius=0.07)
+          radius=0.045)
+    _img(slide, images[1], Emu(bx), Emu(by), Emu(b_w), Emu(b_h))
 
-    # Columna de puntos.
+    # Columna de puntos: alto de fila FIJO y bloque centrado. Repartir la banda
+    # entre k filas dejaba huecos enormes con pocos puntos.
     cx = int(MARGIN) + int(Inches(6.1))
     cw = int(MARGIN) + int(CONTENT_W) - cx
     k = len(points)
     band_top = int(Inches(1.5))
     band_bot = int(T.SLIDE_H) - int(Inches(0.9))
-    row_h = (band_bot - band_top) // k
+    row_h = min(int(Inches(1.25)), (band_bot - band_top) // k)
+    band_top += ((band_bot - band_top) - k * row_h) // 2
     badge = int(Inches(0.82))
     for i, pt in enumerate(points):
         head, text, glyph = (list(pt) + [T.ICON["check"]])[:3]
@@ -2224,13 +2241,18 @@ def add_solution(prs, title, points, images, subtitle="", highlight=None,
         by2 = y + (row_h - badge) // 2
         _rect(slide, Emu(cx), Emu(by2), Emu(badge), Emu(badge),
               fill=T.AZUL_OSCURO, shape=MSO_SHAPE.OVAL)
-        _icon(slide, Emu(cx), Emu(by2), Emu(badge), glyph, color=T.AMARILLO)
+        # nudge=0: dentro de un circulo el icono se centra optico con la caja.
+        _icon(slide, Emu(cx), Emu(by2), Emu(badge), glyph, color=T.AMARILLO,
+              nudge=0.0)
+        # Titular y texto como un bloque compacto, centrado con el circulo.
         tx = cx + badge + int(Inches(0.3))
         tw = cx + cw - tx
-        _text(slide, Emu(tx), Emu(y + int(Inches(0.22))), Emu(tw), Inches(0.4),
+        head_h, gap_t, text_h = int(Inches(0.34)), int(Inches(0.04)), int(Inches(0.6))
+        cy0 = y + (row_h - (head_h + gap_t + text_h)) // 2
+        _text(slide, Emu(tx), Emu(cy0), Emu(tw), Emu(head_h),
               [[(head, {"size": Pt(16), "color": T.AZUL_OSCURO,
                         "font": T.FONT_HEAD})]])
-        _text(slide, Emu(tx), Emu(y + int(Inches(0.68))), Emu(tw), Inches(0.7),
+        _text(slide, Emu(tx), Emu(cy0 + head_h + gap_t), Emu(tw), Emu(text_h),
               [[(text, {"size": Pt(11.5), "color": T.GRIS_SUAVE,
                         "font": T.FONT_BODY})]], line_spacing=1.3)
 
@@ -2251,10 +2273,12 @@ def add_message(prs, eyebrow, title, image, lead, body, author, role="",
     img_w = int(Inches(3.4))
     _img(slide, image, Emu(img_x), 0, Emu(img_w), T.SLIDE_H, radius=0.0)
 
-    # Columna izquierda: antetitulo, titular y firma al pie.
-    _text(slide, MARGIN, Inches(2.55), Emu(col_w), Inches(0.4),
-          [[(eyebrow.upper(), {"size": Pt(13), "bold": True, "color": T.AZUL,
-                               "font": T.FONT_MONO, "spacing": 90})]])
+    # Columna izquierda: antetitulo, titular y firma al pie. La etiqueta usa la
+    # misma pildora que la portada (add_cover). El ancho se ajusta al texto: la
+    # portada la fija en 2.65in porque su eyebrow es largo; "Fundador" nadaria.
+    pill_w = int(Inches(0.6 + 0.075 * len(eyebrow)))
+    _pill(slide, MARGIN, Inches(2.4), Emu(pill_w), Inches(0.32), eyebrow,
+          fill=T.AMARILLO_TINT, text_color=T.AZUL_OSCURO, size=Pt(8.5))
     _stack_title(slide, _emph_runs(title, Pt(32)), MARGIN, Inches(3.0),
                  Emu(col_w), 32, line_h=1.12)
     _text(slide, MARGIN, Inches(5.7), Emu(col_w), Inches(0.4),
@@ -2288,10 +2312,16 @@ def add_message(prs, eyebrow, title, image, lead, body, author, role="",
     return slide
 
 
-def add_spotlight(prs, title, body, image, cta="", page=None, section=""):
+def add_spotlight(prs, title, body, image, cta="", price=None, page=None,
+                  section=""):
     """Extra destacado: foto grande a la derecha y panel navy a la izquierda que
-    la solapa, con titulo, uno o varios parrafos y un boton con flecha.
-    body: str o lista de parrafos. cta: texto del boton (vacio -> solo flecha).
+    la solapa, con titulo, uno o varios parrafos y, al pie, un boton o un precio.
+
+    body: str o lista de parrafos.
+    cta: texto del boton blanco con flecha (vacio -> solo flecha).
+    price: numerico. Si se pasa, SUSTITUYE al boton por una pastilla amarilla con
+    el importe en navy ("+375 EUR"). Formatea con `_fmt_eur`, igual que
+    add_pricing y add_extras.
     """
     slide = _slide(prs)
     _topbar(slide, section)
@@ -2319,19 +2349,34 @@ def add_spotlight(prs, title, body, image, cta="", page=None, section=""):
           [[(p, {"size": Pt(12), "color": T.BLANCO, "font": T.FONT_BODY})]
            for p in parrafos], line_spacing=1.4, space_after=Pt(9))
 
-    bw = int(Inches(1.5)) if not cta else int(Inches(2.4))
-    bh = int(Inches(0.62))
-    bx, by = tx, py + ph - pad - bh
-    btn = _rect(slide, Emu(bx), Emu(by), Emu(bw), Emu(bh), fill=T.BLANCO,
-                shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.12)
-    _soft_shadow(btn, alpha=12000)
-    if cta:
-        _text(slide, Emu(bx + int(Inches(0.3))), Emu(by), Emu(bw - int(Inches(0.95))),
-              Emu(bh), [[(cta, {"size": Pt(12), "bold": True, "color": T.AZUL,
-                                "font": T.FONT_MONO})]],
-              anchor=MSO_ANCHOR.MIDDLE)
-    _icon(slide, Emu(bx + bw - bh), Emu(by), Emu(bh), T.ICON["arrow"],
-          color=T.AZUL)
+    if price is not None:
+        # El precio manda sobre el boton: en un extra destacado, la cifra ES la
+        # llamada a la accion.
+        bw, bh = int(Inches(2.5)), int(Inches(0.8))
+        bx, by = tx, py + ph - pad - bh
+        badge = _rect(slide, Emu(bx), Emu(by), Emu(bw), Emu(bh),
+                      fill=T.AMARILLO, shape=MSO_SHAPE.ROUNDED_RECTANGLE,
+                      radius=0.12)
+        _soft_shadow(badge, alpha=14000)
+        _text(slide, Emu(bx), Emu(by), Emu(bw), Emu(bh),
+              [[("+" + _fmt_eur(price),
+                 {"size": Pt(22), "bold": True, "color": T.AZUL_OSCURO,
+                  "font": T.FONT_NUM})]],
+              align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+    else:
+        bw = int(Inches(1.5)) if not cta else int(Inches(2.4))
+        bh = int(Inches(0.62))
+        bx, by = tx, py + ph - pad - bh
+        btn = _rect(slide, Emu(bx), Emu(by), Emu(bw), Emu(bh), fill=T.BLANCO,
+                    shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.12)
+        _soft_shadow(btn, alpha=12000)
+        if cta:
+            _text(slide, Emu(bx + int(Inches(0.3))), Emu(by),
+                  Emu(bw - int(Inches(0.95))), Emu(bh),
+                  [[(cta, {"size": Pt(12), "bold": True, "color": T.AZUL,
+                           "font": T.FONT_MONO})]], anchor=MSO_ANCHOR.MIDDLE)
+        _icon(slide, Emu(bx + bw - bh), Emu(by), Emu(bh), T.ICON["arrow"],
+              color=T.AZUL)
 
     _pagenum(slide, page)
     return slide

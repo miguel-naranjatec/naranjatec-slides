@@ -439,7 +439,7 @@ def build(prs):
             "Incluye monitorizacion, parches y un informe mensual.",
         ],
         image=T.img("ecco-night.jpg"),
-        cta="LO QUIERO",
+        price=1200,
         page=n(), section="EXTRA",
     )
 
