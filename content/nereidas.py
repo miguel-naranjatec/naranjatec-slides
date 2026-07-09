@@ -207,10 +207,13 @@ def build(prs):
                   image=T.img("ecco-office.jpg"))
 
     # 13) EL PROYECTO EN CIFRAS
+    # El deck habla en euros: no se muestran horas en ningún sitio. Si aquí
+    # apareciesen las 34,5h junto a los 5.175 € del desglose, bastaría dividir
+    # para deducir la tarifa por hora.
     s.add_stats(
         prs,
         [
-            {"value": "34.5h", "label": "de desarrollo estimado"},
+            {"value": "5.175 €", "label": "de inversión estimada"},
             {"value": "20", "label": "bloques reutilizables"},
             {"value": "4", "label": "idiomas listos"},
         ],
