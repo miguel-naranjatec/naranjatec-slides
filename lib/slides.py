@@ -486,6 +486,67 @@ def _emph_runs(text, size, color=T.AZUL_OSCURO, bold=True,
     return runs
 
 
+# --- Presupuestos (add_pricing) ------------------------------------------
+
+EURO = "\u20AC"          # NUNCA el caracter literal: el fichero es ASCII puro
+MAX_PRICING_ROWS = 10    # mas partidas -> ValueError (no se truncan en silencio)
+ROWS_PER_PAGE = 5        # filas que caben holgadas en una pagina
+ROW_H_MAX = Inches(1.05)  # tope de alto de fila: con 1 partida no se estira
+CARD_H_MIN = Inches(2.7)  # minimo para que etiqueta, cifra (1.2in) y coletilla no se toquen
+
+
+def _fmt_miles(entero):
+    """1234567 -> '1.234.567' (separador de miles es-ES)."""
+    s = str(int(entero))
+    grupos = []
+    while len(s) > 3:
+        grupos.insert(0, s[-3:])
+        s = s[:-3]
+    grupos.insert(0, s)
+    return ".".join(grupos)
+
+
+def _centimos(valor):
+    """Importe -> centimos enteros. Redondear aqui, una sola vez, es lo que
+    garantiza que el total nunca contradiga a la suma de las partidas."""
+    return int(round(float(valor) * 100))
+
+
+def _fmt_eur_centimos(centimos):
+    """Centimos enteros -> '1.300 EUR' / '1.300,50 EUR' (es-ES)."""
+    negativo = centimos < 0
+    c = abs(centimos)
+    entero, resto = divmod(c, 100)
+    if entero == 0 and resto == 0:
+        negativo = False
+    if resto:
+        cuerpo = "%s,%02d" % (_fmt_miles(entero), resto)
+    else:
+        cuerpo = _fmt_miles(entero)
+    return "%s%s %s" % ("-" if negativo else "", cuerpo, EURO)
+
+
+def _fmt_eur(valor):
+    """Importe en es-ES: 1300 -> '1.300 EUR'; 1300.5 -> '1.300,50 EUR'.
+
+    Los enteros no llevan decimales; los decimales van con coma y dos cifras.
+    """
+    return _fmt_eur_centimos(_centimos(valor))
+
+
+def _split_rows(rows):
+    """Reparte las partidas en paginas de ROWS_PER_PAGE o menos.
+
+    Con 5 o menos, una sola pagina. Con 6-10, dos paginas equilibradas
+    (7 -> 4+3), para que ninguna quede casi vacia.
+    """
+    n = len(rows)
+    if n <= ROWS_PER_PAGE:
+        return [list(rows)]
+    corte = (n + 1) // 2
+    return [list(rows[:corte]), list(rows[corte:])]
+
+
 def _title(slide, title, y=Inches(1.25), width=None, eyebrow=""):
     """Titulo de contenido limpio (sin barra), tipografia como jerarquia.
     Devuelve la Y inferior REAL del titulo (segun 1 o 2 lineas medidas) para que
@@ -1297,6 +1358,19 @@ def _letter_badge(slide, x, y, size, letter, color=None):
           align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
 
 
+def _num_badge(slide, x, y, size, num):
+    """Circulo RELLENO navy con un ordinal dorado (filas de add_pricing).
+
+    Distinto de _letter_badge, que es de contorno y usa el color del trazo para
+    el texto.
+    """
+    _rect(slide, x, y, size, size, fill=T.AZUL_OSCURO, shape=MSO_SHAPE.OVAL)
+    _text(slide, x, y, size, size,
+          [[(num, {"size": Pt(12), "bold": True, "color": T.AMARILLO,
+                   "font": T.FONT_NUM})]],
+          align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+
+
 def _image_grid(slide, images, x, y, w, h, cols, rows, gap=Inches(0.1), radius=0.0):
     """Rejilla de imagenes (cover) en una region dada."""
     cw = Emu((int(w) - (cols - 1) * int(gap)) // cols)
@@ -1855,3 +1929,153 @@ def add_product(prs, title, stat, kicker, rows, page=None, section=""):
                                      "font": T.FONT_BODY})]], line_spacing=1.25)
     _pagenum(slide, page)
     return slide
+
+
+def _pricing_page(prs, title, rows, ordinal, subtitle, section, page,
+                  texto_total, note):
+    """Pinta UNA pagina del desglose. texto_total=None -> sin tarjeta (pagina
+    no final): las filas ocupan todo el ancho."""
+    slide = _slide(prs)
+    _topbar(slide, section)
+    tb = _title(slide, title, y=Inches(1.35))
+    top = max(int(Inches(2.5)), int(tb) + int(GAP_AFTER_TITLE))
+    if subtitle:
+        _text(slide, MARGIN, Emu(int(tb) + int(Inches(0.1))), Inches(9.0),
+              Inches(0.5),
+              [[(subtitle, {"size": Pt(14), "italic": True,
+                            "color": T.GRIS_SUAVE,
+                            "font": T.FONT_TITLE_EMPH})]])
+        top += int(Inches(0.45))
+
+    bottom = int(Inches(6.3)) if note else int(Inches(6.6))
+    block_h = bottom - top
+
+    con_total = texto_total is not None
+    gap_col = int(Inches(0.5))
+    rows_w = int(0.60 * int(CONTENT_W)) if con_total else int(CONTENT_W)
+
+    # Alto de fila topado: sin el tope, una sola partida ocuparia todo el hueco.
+    # El bloque resultante se centra verticalmente entre `top` y `bottom`.
+    k = len(rows)
+    gap_r = int(Inches(0.18))
+    row_h = max(int(Inches(0.4)),
+                min(int(ROW_H_MAX), (block_h - (k - 1) * gap_r) // k))
+    used_h = k * row_h + (k - 1) * gap_r
+    rows_top = top + (block_h - used_h) // 2
+
+    badge = int(Inches(0.34))
+    pad = int(Inches(0.28))
+    amount_w = int(Inches(2.3))
+    concept_x = int(MARGIN) + pad + badge + pad
+    concept_w = int(MARGIN) + rows_w - amount_w - int(Inches(0.5)) - concept_x
+
+    for i, (concepto, importe) in enumerate(rows):
+        y = rows_top + i * (row_h + gap_r)
+        card = _rect(slide, MARGIN, Emu(y), Emu(rows_w), Emu(row_h),
+                     fill=T.BLANCO, shape=MSO_SHAPE.ROUNDED_RECTANGLE,
+                     radius=0.06)
+        _soft_shadow(card, alpha=10000)
+        _num_badge(slide, Emu(int(MARGIN) + pad),
+                   Emu(y + (row_h - badge) // 2), Emu(badge),
+                   "%d" % (ordinal + i))
+        _text(slide, Emu(concept_x), Emu(y), Emu(concept_w), Emu(row_h),
+              [[(concepto, {"size": Pt(14.5), "color": T.AZUL_OSCURO,
+                            "font": T.FONT_HEAD})]],
+              anchor=MSO_ANCHOR.MIDDLE)
+        _text(slide, Emu(int(MARGIN) + rows_w - amount_w - int(Inches(0.35))),
+              Emu(y), Emu(amount_w), Emu(row_h),
+              [[(_fmt_eur(importe), {"size": Pt(15), "bold": True,
+                                     "color": T.AZUL_OSCURO,
+                                     "font": T.FONT_NUM})]],
+              align=PP_ALIGN.RIGHT, anchor=MSO_ANCHOR.MIDDLE)
+
+    # La tarjeta se alinea con el BLOQUE REAL de filas (rows_top/used_h), no con
+    # el hueco completo: si no, con pocas partidas quedaria descuadrada.
+    if con_total:
+        card_x = int(MARGIN) + rows_w + gap_col
+        card_w = int(CONTENT_W) - rows_w - gap_col
+        card_h = max(int(used_h), int(CARD_H_MIN))
+        card_y = int(rows_top) + (int(used_h) - card_h) // 2
+        card = _rect(slide, Emu(card_x), Emu(card_y), Emu(card_w),
+                     Emu(card_h), fill=T.AMARILLO,
+                     shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.08)
+        _soft_shadow(card, alpha=9000)
+        _text(slide, Emu(card_x), Emu(card_y + int(Inches(0.35))), Emu(card_w),
+              Inches(0.35),
+              [[("TOTAL ESTIMADO", {"size": Pt(11), "color": T.AZUL_OSCURO,
+                                    "font": T.FONT_MONO, "spacing": 120})]],
+              align=PP_ALIGN.CENTER)
+        cifra_h = int(Inches(1.2))
+        _text(slide, Emu(card_x), Emu(card_y + (card_h - cifra_h) // 2),
+              Emu(card_w), Emu(cifra_h),
+              [[(texto_total, {"size": Pt(38), "bold": True,
+                               "color": T.AZUL_OSCURO, "font": T.FONT_NUM})]],
+              align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+        _text(slide, Emu(card_x), Emu(card_y + card_h - int(Inches(0.7))),
+              Emu(card_w), Inches(0.35),
+              [[("IVA no incluido", {"size": Pt(12), "italic": True,
+                                     "color": T.AZUL_OSCURO,
+                                     "font": T.FONT_TITLE_EMPH})]],
+              align=PP_ALIGN.CENTER)
+
+    if note:
+        _text(slide, MARGIN, Emu(bottom + int(Inches(0.25))),
+              Emu(int(CONTENT_W) - int(Inches(1.4))),
+              Inches(0.6),
+              [[(note, {"size": Pt(10), "italic": True, "color": T.GRIS_SUAVE,
+                        "font": T.FONT_BODY})]], line_spacing=1.25)
+
+    _pagenum(slide, page)
+    return slide
+
+
+def add_pricing(prs, title, rows, note="", total=None, subtitle="", page=None,
+                section=""):
+    """Desglose de presupuesto: partidas numeradas + tarjeta de total + nota.
+
+    rows  : [(concepto, importe)] con importe int/float. Maximo 10 partidas.
+    total : None -> se suma a partir de rows. Un str se pinta tal cual
+            ("A convenir"). NO acepta un numero: el total nunca debe poder
+            contradecir al desglose.
+    page  : el CONTADOR, no su valor. page=n, no page=n(). Se invoca una vez
+            por pagina generada.
+
+    MULTIPAGINA: con 6-10 partidas genera dos diapositivas (la primera a ancho
+    completo, sin tarjeta) y el total va en la ultima. Devuelve SIEMPRE la lista
+    de slides, tenga una o dos.
+    """
+    if not rows:
+        raise ValueError("add_pricing: 'rows' no puede estar vacia")
+    if len(rows) > MAX_PRICING_ROWS:
+        raise ValueError(
+            "add_pricing: %d partidas; el maximo es %d. Agrupa partidas o usa "
+            "dos diapositivas: no se truncan en silencio."
+            % (len(rows), MAX_PRICING_ROWS))
+    if total is not None and not isinstance(total, str):
+        raise TypeError(
+            "add_pricing: 'total' debe ser None o str (p.ej. 'A convenir'); "
+            "los importes se suman a partir de 'rows'")
+    if page is not None and not callable(page):
+        raise TypeError(
+            "add_pricing: 'page' debe ser el contador (page=n), no su valor "
+            "(page=n())")
+
+    rows = [tuple(r) for r in rows]
+    if total is not None:
+        texto_total = total
+    else:
+        # Sumamos centimos ya redondeados: asi el total SIEMPRE coincide con la
+        # suma de los importes que se pintan en las filas.
+        texto_total = _fmt_eur_centimos(sum(_centimos(r[1]) for r in rows))
+    paginas = _split_rows(rows)
+    slides = []
+    ordinal = 1
+    for i, chunk in enumerate(paginas):
+        ultima = (i == len(paginas) - 1)
+        slides.append(_pricing_page(
+            prs, title, chunk, ordinal=ordinal, subtitle=subtitle,
+            section=section, page=(page() if page is not None else None),
+            texto_total=(texto_total if ultima else None),
+            note=(note if ultima else "")))
+        ordinal += len(chunk)
+    return slides

@@ -164,6 +164,20 @@ def build(prs):
         section="Ejemplo",
     )
 
+    # 11b) DESGLOSE DE PRESUPUESTO (NUEVO)
+    s.add_pricing(
+        prs,
+        "Desglose de la *inversion*",
+        [("Descubrimiento y diseno UX", 1300),
+         ("Desarrollo a medida", 2950),
+         ("Contenidos, QA y lanzamiento", 1280)],
+        note="Calculado para un catalogo de unas 2.000 referencias. Un "
+             "surtido mayor puede influir en el precio. Precios sin IVA.",
+        subtitle="Todo lo que incluye la propuesta",
+        page=n,
+        section="INVERSION",
+    )
+
     # 12) LINEA DE TIEMPO (NUEVO)
     s.add_timeline(
         prs,
