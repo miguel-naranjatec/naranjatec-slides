@@ -2,7 +2,7 @@
 
 Las presentaciones usan 5 familias. Deben estar **instaladas en el sistema** que
 renderiza el .pptx (PowerPoint sustituye las que falten). Los `.ttf`/`.otf` estan
-aqui para poder instalarlas en cualquier maquina; el .zip original tambien se conserva.
+aqui para poder instalarlas en cualquier maquina.
 
 | Rol en `brand/theme.py` | Familia | Carpeta |
 |--------------------------|---------|---------|
@@ -33,7 +33,11 @@ Get-ChildItem -Recurse -Include *.ttf,*.otf brand/assets/fonts |
 O mas simple: seleccionar los `.ttf`/`.otf`, clic derecho -> Instalar.
 
 ### macOS / Linux
-Copiar los `.ttf` (de `*/static/`) y el `.otf` de `Material_Icons/` a
+Automatico:
+```
+python scripts/preview.py --install-fonts
+```
+O a mano: copiar los `.ttf` (de `*/static/`) y el `.otf` de `Material_Icons/` a
 `~/Library/Fonts/` (macOS) o `~/.local/share/fonts/` (Linux) y ejecutar
 `fc-cache -f` en Linux.
 

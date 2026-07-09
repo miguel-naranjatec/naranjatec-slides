@@ -8,6 +8,47 @@ consistente la paleta, la tipografia y el logo de la empresa.
 > detallado en [`CLAUDE.md`](CLAUDE.md): catalogo de layouts, convenciones,
 > codificacion y gotchas.
 
+## Empezar aqui
+
+**El `.pptx` no es la fuente, es el resultado.** La fuente es el modulo de
+`content/`. Si abres el deck en PowerPoint, retocas un titulo a mano y despues se
+regenera, ese retoque se pierde. Los cambios se piden en el contenido y se
+vuelve a generar; el deck se edita a mano solo cuando ya es la version final.
+
+Puesta a punto, una sola vez:
+
+```
+git clone https://github.com/miguel-naranjatec/naranjatec-slides.git
+cd naranjatec-slides
+pip install -r requirements.txt
+```
+
+Instala ademas las 4 familias de marca y la fuente de iconos (ver
+`brand/assets/fonts/README.md`). Sin ellas el deck se genera igual, pero la
+tipografia se sustituye y **los iconos salen como cajas**.
+
+Despues, genera el muestrario para ver de que dispones:
+
+```
+python build/build.py test
+```
+
+Trabajando con IA (Claude Cowork), el ciclo habitual es: le das el brief o el
+`.md` de la propuesta, pide "monta un deck de NaranjaTec con esto", y el
+asistente escribe el modulo de `content/` siguiendo [`CLAUDE.md`](CLAUDE.md).
+Revisas el resultado y pides los cambios en lenguaje natural.
+
+Que tocar y que no:
+
+- `content/` es tuyo: son datos, no logica.
+- `lib/slides.py` es maquetacion compartida y `brand/theme.py` es la marca. Un
+  cambio ahi afecta a TODOS los decks: es una decision deliberada.
+- Dos topes que sorprenden: `add_bullets` pinta como maximo 4 elementos y
+  `add_process` es una rejilla 2x2 (tambien 4). Si el contenido no cabe, fusiona
+  o cambia de layout (`add_service_grid` admite 9).
+- Codificacion: el codigo y el deck de test van en ASCII puro; los decks de
+  cliente llevan acentos y ene reales, porque son entregables.
+
 ## Requisitos
 
 - Python 3.10 o superior (probado con 3.14).
@@ -41,6 +82,26 @@ Slides como cualquier presentacion normal.
 > Nota: PowerPoint bloquea el archivo mientras lo tienes abierto (al regenerar da
 > `PermissionError`) y no recarga solo: cierra y reabre para ver los cambios.
 
+## Previsualizar sin PowerPoint
+
+En entornos sin PowerPoint (Claude Cowork, Linux, CI) se puede revisar el deck
+con LibreOffice headless: convierte a PDF y rasteriza una imagen por pagina.
+
+```
+python scripts/preview.py --install-fonts   # una vez (Linux/macOS)
+python scripts/preview.py test              # genera el deck y lo previsualiza
+python scripts/preview.py nereidas --dpi 120
+python scripts/preview.py output/Otro.pptx --pdf-only
+```
+
+Los PNG quedan en `output/preview/<nombre-del-deck>/`. Requiere LibreOffice
+(`libreoffice-impress`) y, para los PNG, `pdftoppm` (`poppler-utils`); si falta
+poppler, el script se queda en el PDF y lo avisa.
+
+LibreOffice no es PowerPoint: la conversion es fiel para revisar composicion,
+recortes y desbordes de texto, pero puede desviarse en detalles finos. La
+verificacion definitiva sigue siendo abrir el `.pptx`.
+
 ## Estructura
 
 ```
@@ -54,6 +115,7 @@ content/                Contenido de cada deck (datos, no logica)
   nereidas.py           Deck de cliente real: propuesta de web (alias: nereidas)
 templates/              Plantillas de arranque (NO registradas en DECKS por defecto)
 build/build.py          Generador: compone contenido + maquetacion y guarda el .pptx
+scripts/preview.py      Previsualizacion sin PowerPoint (LibreOffice headless -> PNG)
 output/                 Presentaciones generadas (no se versionan)
 ```
 
