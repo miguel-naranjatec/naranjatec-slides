@@ -486,6 +486,45 @@ def _emph_runs(text, size, color=T.AZUL_OSCURO, bold=True,
     return runs
 
 
+# --- Presupuestos (add_pricing) ------------------------------------------
+
+EURO = "\u20AC"          # NUNCA el caracter literal: el fichero es ASCII puro
+MAX_PRICING_ROWS = 10    # mas partidas -> ValueError (no se truncan en silencio)
+ROWS_PER_PAGE = 5        # filas que caben holgadas en una pagina
+ROW_H_MAX = Inches(1.05)  # tope de alto de fila: con 1 partida no se estira
+
+
+def _fmt_miles(entero):
+    """1234567 -> '1.234.567' (separador de miles es-ES)."""
+    s = str(int(entero))
+    grupos = []
+    while len(s) > 3:
+        grupos.insert(0, s[-3:])
+        s = s[:-3]
+    grupos.insert(0, s)
+    return ".".join(grupos)
+
+
+def _fmt_eur(valor):
+    """Importe en es-ES: 1300 -> '1.300 EUR'; 1300.5 -> '1.300,50 EUR'.
+
+    (En el codigo EUR es el escape EURO; aqui se nombra asi por ser ASCII.)
+    Los enteros no llevan decimales; los decimales van con coma y dos cifras.
+    """
+    negativo = valor < 0
+    v = abs(valor)
+    entero = int(v)
+    centimos = int(round((float(v) - entero) * 100))
+    if centimos == 100:          # 1299.999 -> 1.300
+        entero += 1
+        centimos = 0
+    if centimos:
+        cuerpo = "%s,%02d" % (_fmt_miles(entero), centimos)
+    else:
+        cuerpo = _fmt_miles(entero)
+    return "%s%s %s" % ("-" if negativo else "", cuerpo, EURO)
+
+
 def _title(slide, title, y=Inches(1.25), width=None, eyebrow=""):
     """Titulo de contenido limpio (sin barra), tipografia como jerarquia.
     Devuelve la Y inferior REAL del titulo (segun 1 o 2 lineas medidas) para que

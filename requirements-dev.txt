@@ -1,0 +1,4 @@
+# Solo para ejecutar los tests. Las dependencias de ejecucion estan en
+# requirements.txt (python-pptx + Pillow).
+-r requirements.txt
+pytest>=8.0
