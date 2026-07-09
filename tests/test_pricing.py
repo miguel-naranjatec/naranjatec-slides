@@ -179,3 +179,27 @@ def test_importes_negativos_restan_del_total():
     textos = _textos(slide)
     assert ("-250 " + s.EURO) in textos
     assert ("750 " + s.EURO) in textos
+
+
+def _forma_por_texto(slide, texto):
+    for sp in slide.shapes:
+        if sp.has_text_frame and sp.text_frame.text == texto:
+            return sp
+    raise AssertionError("no encuentro la forma con texto %r" % texto)
+
+
+def test_la_tarjeta_de_total_no_apila_sus_textos_con_una_sola_partida():
+    slide = s.add_pricing(_prs(), "Inversion", [("Unica", 1300)])[0]
+    etiqueta = _forma_por_texto(slide, "TOTAL ESTIMADO")
+    coletilla = _forma_por_texto(slide, "IVA no incluido")
+    # la etiqueta termina antes de que empiece la coletilla
+    assert etiqueta.top + etiqueta.height <= coletilla.top
+
+
+def test_la_nota_no_invade_el_numero_de_pagina():
+    from pptx.util import Inches as In
+    slide = s.add_pricing(_prs(), "Inversion", _filas(2),
+                          note="Nota larga. " * 20)[0]
+    nota = _forma_por_texto(slide, "Nota larga. " * 20)
+    # _pagenum empieza en SLIDE_W - 1.3in
+    assert nota.left + nota.width <= int(s.T.SLIDE_W) - int(In(1.3))
