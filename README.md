@@ -114,6 +114,7 @@ brand/theme.py          Paleta, tipografia, iconos, medidas y helper de imagenes
 brand/assets/logo*.png  Logo de color y version blanca
 brand/assets/fonts/     Las 4 familias de marca (.ttf) + README de instalacion
 brand/assets/img/       Biblioteca de imagenes del proyecto (portable, optimizadas)
+brand/assets/blocks/    Esquemas (wireframes) de bloques de pagina: SVG + PNG derivados
 lib/slides.py           Libreria de maquetacion (layouts add_* + helpers)
 content/                Contenido de cada deck (datos, no logica)
   muestrario.py         Muestrario con un ejemplo de cada tipo de diapositiva (alias: test)
@@ -126,12 +127,12 @@ output/                 Presentaciones generadas (no se versionan)
 
 ## Tipos de diapositiva
 
-`lib/slides.py` ofrece ~32 layouts: portada, indice, separadores, statement,
+`lib/slides.py` ofrece ~33 layouts: portada, indice, separadores, statement,
 vinetas, dos columnas, rejilla de servicios, proceso, texto+imagen, cifras,
 timeline (multipagina), comparativa, galerias, banda de features, mision, rejilla
 numerada, testimonio, cifras destacadas, valores, resumen, producto, desglose de presupuesto,
 productos adicionales, extra destacado, solucion, mensaje destacado,
-proximos pasos, hero,
+proximos pasos, catalogo de bloques de pagina, hero,
 cierres/CTA, etc. El catalogo completo con la firma de cada uno esta en
 [`CLAUDE.md`](CLAUDE.md).
 

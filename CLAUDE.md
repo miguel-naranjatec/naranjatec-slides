@@ -136,9 +136,15 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
   Mensaje destacado a 3 columnas: antetitulo + titular + firma izq, foto vertical
   a sangre en el centro (con comillas doradas grandes), entradilla en negrita
   (`lead`) + cuerpo (`body`: str o lista) dcha.
+- `add_blocks_grid(prs, title, blocks, subtitle="", page=n, section="")`
+  Catalogo de bloques de pagina: 12 por diapositiva (4x3), cada tarjeta con el
+  esquema del bloque, su nombre y una descripcion muy corta.
+  `blocks`: `[(slug, nombre, descripcion)]`; `slug` es el nombre del SVG de
+  `brand/assets/blocks/`. **MULTIPAGINA**: devuelve SIEMPRE una lista y `page`
+  recibe el CONTADOR (`page=n`), como `add_pricing`.
 - `add_next_steps(prs, title, steps, subtitle="", page, section)`
-  Proximos pasos: 3-5 circulos (alternan navy relleno / blanco) unidos por arcos
-  elipticos que alternan arriba y abajo, con punta de flecha; debajo, numero,
+  Proximos pasos: 3-5 circulos amarillos (icono navy) unidos por arcos elipticos
+  grises que alternan arriba y abajo, con punta de flecha; debajo, numero,
   titular y descripcion. `steps`: `[(titular, texto, glyph)]`. Fuera de 3-5 ->
   `ValueError`. Los arcos son formas libres (`_arc_band`): python-pptx no tiene
   arco grueso.
@@ -182,6 +188,12 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
 
 - **PowerPoint bloquea el `.pptx` abierto**: al reconstruir da `PermissionError`.
   Solucion: cerrar el archivo, o guardar a una ruta temporal para verificar.
+- **`python-pptx` NO acepta SVG** (`UnidentifiedImageError`). Los esquemas de
+  bloque viven como SVG en `brand/assets/blocks/` (la fuente portable: sirve para
+  web o Figma) y se rasterizan a PNG transparente con `scripts/make_blocks.py`
+  (Edge headless; no hay cairosvg ni inkscape aqui). Los SVG los ESCRIBE
+  `scripts/gen_blocks.py`: no editarlos a mano. Flujo: editar `gen_blocks.py` ->
+  `python scripts/gen_blocks.py` -> `python scripts/make_blocks.py`.
 - **Cajas de alto/ancho <= 0 corrompen el .pptx**: `python-pptx` las escribe sin
   quejarse y luego PowerPoint dice "no puede abrir el archivo" (python-pptx si lo
   abre, lo que despista). Suele venir de restar dos posiciones y que salga

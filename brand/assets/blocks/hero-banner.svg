@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" width="320" height="180" role="img" aria-label="hero-banner">
+  <!-- Generado por scripts/gen_blocks.py. No editar a mano. -->
+  <rect x="6" y="6" width="308" height="168" rx="10" fill="none" stroke="#0B3D66" stroke-width="3"/><rect x="20" y="24" width="130" height="132" rx="6" fill="#E9EEF3" stroke="#0B3D66" stroke-width="3"/><path d="M20 24 L150 156 M150 24 L20 156" stroke="#0B3D66" stroke-width="2.5" opacity="0.55"/><rect x="166" y="46" width="118" height="10" rx="4" fill="#0B3D66"/><rect x="166" y="70" width="118" height="6" rx="3" fill="#C3CEDA"/><rect x="166" y="81" width="118" height="6" rx="3" fill="#C3CEDA"/><rect x="166" y="92" width="70.8" height="6" rx="3" fill="#C3CEDA"/><rect x="166" y="116" width="56" height="18" rx="9" fill="#FFCD33"/>
+</svg>

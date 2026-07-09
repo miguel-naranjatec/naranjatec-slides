@@ -106,6 +106,26 @@ def img(name):
         raise FileNotFoundError("Imagen no encontrada en la biblioteca: %s" % p)
     return str(p)
 
+
+BLOCKS_SRC = _ASSETS / "blocks"          # SVG: la fuente portable
+BLOCKS_DIR = _ASSETS / "blocks" / "png"  # PNG: lo que se inserta en el .pptx
+
+
+def block(name):
+    """Ruta al PNG del esquema de un bloque de pagina. Ej.: theme.block("hero").
+
+    La fuente es el SVG de brand/assets/blocks/ (portable, reutilizable en web o
+    Figma); el PNG lo genera scripts/make_blocks.py porque python-pptx NO acepta
+    SVG. Lanza FileNotFoundError si falta: seguramente no se ha rasterizado.
+    """
+    p = BLOCKS_DIR / (name + ".png")
+    if not p.exists():
+        raise FileNotFoundError(
+            "Esquema de bloque no encontrado: %s. Genera los PNG con: "
+            "python scripts/make_blocks.py" % p)
+    return str(p)
+
+
 # --- Eslogan corporativo ---
 ESLOGAN = "Algo mas que informar, inspirar"
 

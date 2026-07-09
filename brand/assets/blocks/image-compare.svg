@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" width="320" height="180" role="img" aria-label="image-compare">
+  <!-- Generado por scripts/gen_blocks.py. No editar a mano. -->
+  <rect x="6" y="6" width="308" height="168" rx="10" fill="none" stroke="#0B3D66" stroke-width="3"/><rect x="20" y="26" width="128" height="128" rx="6" fill="#E9EEF3" stroke="#0B3D66" stroke-width="3"/><path d="M20 26 L148 154 M148 26 L20 154" stroke="#0B3D66" stroke-width="2.5" opacity="0.55"/><rect x="172" y="26" width="128" height="128" rx="6" fill="#E9EEF3" stroke="#0B3D66" stroke-width="3"/><path d="M172 26 L300 154 M300 26 L172 154" stroke="#0B3D66" stroke-width="2.5" opacity="0.55"/><path d="M160 26 V154" stroke="#0B3D66" stroke-width="3"/><circle cx="160" cy="90" r="11" fill="#FFCD33"/>
+</svg>

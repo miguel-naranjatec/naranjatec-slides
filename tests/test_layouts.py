@@ -154,3 +154,56 @@ def test_add_next_steps_pinta_un_arco_y_una_punta_por_hueco():
         # OJO: "custGeom" aparece dos veces por forma (apertura y cierre).
         assert xml.count("<a:custGeom>") == n - 1, "arcos con n=%d" % n
         assert xml.count('prst="triangle"') == n - 1, "puntas con n=%d" % n
+
+
+# --- add_blocks_grid ------------------------------------------------------
+
+def _bloque():
+    return ("hero-banner", "Hero", "Imagen, titular y CTA.")
+
+
+def test_add_blocks_grid_devuelve_siempre_lista():
+    out = s.add_blocks_grid(_prs(), "Bloques", [_bloque()] * 3)
+    assert isinstance(out, list) and len(out) == 1
+
+
+def test_add_blocks_grid_pagina_de_doce_en_doce():
+    for n, paginas in ((12, 1), (13, 2), (24, 2), (25, 3)):
+        out = s.add_blocks_grid(_prs(), "Bloques", [_bloque()] * n)
+        assert len(out) == paginas, "n=%d" % n
+
+
+def test_add_blocks_grid_invoca_el_contador_por_pagina():
+    llamadas = []
+
+    def contador():
+        llamadas.append(len(llamadas) + 1)
+        return len(llamadas)
+
+    s.add_blocks_grid(_prs(), "Bloques", [_bloque()] * 13, page=contador)
+    assert llamadas == [1, 2]
+
+
+def test_add_blocks_grid_vacia_lanza():
+    with pytest.raises(ValueError, match="vacia"):
+        s.add_blocks_grid(_prs(), "Bloques", [])
+
+
+def test_add_blocks_grid_page_evaluado_lanza():
+    with pytest.raises(TypeError, match="contador"):
+        s.add_blocks_grid(_prs(), "Bloques", [_bloque()], page=7)
+
+
+def test_block_inexistente_lanza_con_pista():
+    with pytest.raises(FileNotFoundError, match="make_blocks"):
+        T.block("este-bloque-no-existe")
+
+
+def test_todos_los_svg_tienen_su_png():
+    # El SVG es la fuente; el PNG es lo que entra en el .pptx. Si falta uno,
+    # el deck revienta al construirse, no al abrirse.
+    svgs = {p.stem for p in T.BLOCKS_SRC.glob("*.svg")}
+    pngs = {p.stem for p in T.BLOCKS_DIR.glob("*.png")}
+    assert svgs, "no hay SVG de bloques"
+    assert svgs - pngs == set(), "sin rasterizar: %s" % sorted(svgs - pngs)
+    assert pngs - svgs == set(), "PNG huerfanos: %s" % sorted(pngs - svgs)

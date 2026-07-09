@@ -520,6 +520,42 @@ def build(prs):
         page=n(), section="SIGUIENTE",
     )
 
+    # 23g) CATALOGO DE BLOQUES DE PAGINA (NUEVO)
+    # 12 por diapositiva. Los esquemas salen de brand/assets/blocks/ (SVG ->
+    # PNG). OJO: add_blocks_grid recibe el contador `n`, no `n()`.
+    s.add_blocks_grid(
+        prs,
+        "Bloques de *pagina*",
+        [
+            ("hero-banner", "Hero / banner principal",
+             "Imagen, titular y un CTA claro."),
+            ("hero-fullscreen", "Hero a pantalla completa",
+             "Imagen a sangre con un unico CTA."),
+            ("carousel-featured", "Carrusel de destacados",
+             "Slider de piezas destacadas."),
+            ("page-header", "Encabezado de pagina",
+             "Titulo, migas y entradilla."),
+            ("welcome-video", "Bienvenida con video",
+             "Video de portada con reproduccion."),
+            ("text-image", "Texto + imagen",
+             "Texto a un lado, imagen al otro."),
+            ("pull-quote", "Frase destacada",
+             "Una cita que corta la lectura."),
+            ("kpis", "KPIs / contadores",
+             "Cifras animadas de trayectoria."),
+            ("testimonials", "Testimonios",
+             "Resenas reales cerca de los CTA."),
+            ("gallery-grid", "Galeria en cuadricula",
+             "Rejilla de imagenes con lightbox."),
+            ("faq-accordion", "FAQ en acordeon",
+             "Preguntas y respuestas plegables."),
+            ("pricing-plans", "Tarifas / planes",
+             "Comparativa de planes con CTA."),
+        ],
+        subtitle="La biblioteca con la que se monta toda la web",
+        page=n, section="BLOQUES",
+    )
+
     # 24) GRACIAS / CIERRE sobre foto (NUEVO)
     s.add_thanks(
         prs,

@@ -2632,3 +2632,86 @@ def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
 
     _pagenum(slide, page)
     return slide
+
+
+BLOCKS_PER_PAGE = 12   # 4 columnas x 3 filas
+
+
+def _blocks_page(prs, title, blocks, subtitle, section, page):
+    slide = _slide(prs)
+    _topbar(slide, section)
+    tb = _title(slide, title, y=Inches(1.05))
+    top = max(int(Inches(1.95)), int(tb) + int(Inches(0.3)))
+    if subtitle:
+        _text(slide, MARGIN, Emu(int(tb) + int(Inches(0.06))), Inches(9.0),
+              Inches(0.4),
+              [[(subtitle, {"size": Pt(13), "italic": True,
+                            "color": T.GRIS_SUAVE,
+                            "font": T.FONT_TITLE_EMPH})]])
+        top += int(Inches(0.42))
+
+    bottom = int(T.SLIDE_H) - int(Inches(0.5))
+    cols, rows = 4, 3
+    gap = int(Inches(0.18))
+    card_w = (int(CONTENT_W) - (cols - 1) * gap) // cols
+    card_h = (bottom - top - (rows - 1) * gap) // rows
+
+    pad = int(Inches(0.14))
+    thumb_w = int(Inches(1.3))
+    thumb_h = int(thumb_w * 9 / 16)
+    for i, b in enumerate(blocks):
+        slug, nombre, desc = (list(b) + ["", ""])[:3]
+        r, c = divmod(i, cols)
+        x = int(MARGIN) + c * (card_w + gap)
+        y = top + r * (card_h + gap)
+        card = _rect(slide, Emu(x), Emu(y), Emu(card_w), Emu(card_h),
+                     fill=T.BLANCO, shape=MSO_SHAPE.ROUNDED_RECTANGLE,
+                     radius=0.06)
+        _soft_shadow(card, alpha=9000)
+
+        # Esquema a la izquierda: el PNG ya trae el wireframe con fondo
+        # transparente, asi que no necesita marco propio.
+        slide.shapes.add_picture(T.block(slug), Emu(x + pad),
+                                 Emu(y + (card_h - thumb_h) // 2),
+                                 width=Emu(thumb_w), height=Emu(thumb_h))
+
+        tx = x + pad + thumb_w + int(Inches(0.14))
+        tw = x + card_w - pad - tx
+        runs = [[(nombre, {"size": Pt(9.5), "color": T.AZUL_OSCURO,
+                           "font": T.FONT_HEAD})]]
+        if desc:
+            runs.append([(desc, {"size": Pt(7.5), "color": T.GRIS_SUAVE,
+                                 "font": T.FONT_BODY})])
+        _text(slide, Emu(tx), Emu(y + pad), Emu(tw), Emu(card_h - 2 * pad), runs,
+              anchor=MSO_ANCHOR.MIDDLE, line_spacing=1.12, space_after=Pt(2))
+
+    _pagenum(slide, page)
+    return slide
+
+
+def add_blocks_grid(prs, title, blocks, subtitle="", page=None, section=""):
+    """Catalogo de bloques de pagina: 12 por diapositiva (4x3).
+
+    Cada tarjeta lleva el esquema del bloque (wireframe SVG rasterizado, ver
+    brand/assets/blocks/ y scripts/gen_blocks.py), su nombre y una descripcion
+    muy corta.
+
+    blocks: [(slug, nombre, descripcion)]. `slug` es el nombre del SVG.
+
+    MULTIPAGINA: pagina de 12 en 12 y devuelve SIEMPRE una lista de slides. Como
+    add_pricing, `page` recibe el CONTADOR (`page=n`), no su valor.
+    """
+    if not blocks:
+        raise ValueError("add_blocks_grid: 'blocks' no puede estar vacia")
+    if page is not None and not callable(page):
+        raise TypeError(
+            "add_blocks_grid: 'page' debe ser el contador (page=n), no su valor "
+            "(page=n())")
+
+    slides = []
+    for i in range(0, len(blocks), BLOCKS_PER_PAGE):
+        chunk = blocks[i:i + BLOCKS_PER_PAGE]
+        slides.append(_blocks_page(
+            prs, title, chunk, subtitle, section,
+            page() if page is not None else None))
+    return slides
