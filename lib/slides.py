@@ -2551,19 +2551,24 @@ def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
     slide = _slide(prs)
     _topbar(slide, section)
     tb = _title(slide, title, y=Inches(1.35))
+    top = max(int(Inches(2.35)), int(tb) + int(GAP_AFTER_TITLE))
     if subtitle:
         _text(slide, MARGIN, Emu(int(tb) + int(Inches(0.1))), Inches(9.0),
               Inches(0.5),
               [[(subtitle, {"size": Pt(14), "italic": True,
                             "color": T.GRIS_SUAVE,
                             "font": T.FONT_TITLE_EMPH})]])
+        top += int(Inches(0.5))   # el subtitulo ocupa sitio
 
     n = len(steps)
     col_w = int(CONTENT_W) // n
-    cy = int(Inches(3.55))
     r = int(Inches(0.62))
-    thick = int(Inches(0.085))
-    head = int(Inches(0.26))
+    thick = int(Inches(0.035))    # trazo fino: el arco acompana, no compite
+    head = int(Inches(0.17))
+    ry_max = int(Inches(0.8))     # arcos aplanados: ocupan menos alto
+    # El centro de los circulos se deriva del contenido de arriba: el arco sube
+    # `ry_max` sobre cy y no debe morder el subtitulo.
+    cy = top + ry_max + thick // 2
 
     # Arcos primero: van por debajo de los circulos.
     for i in range(n - 1):
@@ -2574,7 +2579,7 @@ def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
         rad = (cx_b - cx_a) / 2.0
         color = T.GRIS_BORDE if arriba else T.AZUL_OSCURO
         rx = (cx_b - cx_a) / 2.0
-        ry = min(rx, float(int(Inches(1.05))))   # altura topada: ver _arc_band
+        ry = min(rx, float(ry_max))              # altura topada: ver _arc_band
         t0 = _arc_t0(rx, ry, r + int(Inches(0.06)))
         ex, ey = _arc_band(slide, mid, cy, rx, ry, thick, arriba, color, t0=t0)
         # Tangente de la ELIPSE en el extremo: el triangulo apunta al circulo.
@@ -2582,37 +2587,35 @@ def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
         rot = math.degrees(math.atan2(dx, -dy if arriba else dy))
         _arrow_head(slide, ex, ey, head, color, rot)
 
+    # Todos los circulos iguales: amarillo con el icono en azul marino.
     for i, st in enumerate(steps):
         head_txt, text, glyph = (list(st) + [T.ICON["check"]])[:3]
         cx = int(MARGIN) + i * col_w + col_w // 2
-        relleno = (i % 2 == 1)
-        if relleno:
-            _rect(slide, Emu(cx - r), Emu(cy - r), Emu(2 * r), Emu(2 * r),
-                  fill=T.AZUL_OSCURO, shape=MSO_SHAPE.OVAL)
-            icon_col = T.AMARILLO
-        else:
-            circ = _rect(slide, Emu(cx - r), Emu(cy - r), Emu(2 * r), Emu(2 * r),
-                         fill=T.BLANCO, shape=MSO_SHAPE.OVAL)
-            _soft_shadow(circ, alpha=10000)
-            icon_col = T.AZUL_OSCURO
+        _rect(slide, Emu(cx - r), Emu(cy - r), Emu(2 * r), Emu(2 * r),
+              fill=T.AMARILLO, shape=MSO_SHAPE.OVAL)
         _icon(slide, Emu(cx - r), Emu(cy - r), Emu(2 * r), glyph,
-              color=icon_col, nudge=0.0)
+              color=T.AZUL_OSCURO, nudge=0.0)
 
+        # Numero, titular y descripcion como un bloque compacto.
         tw = col_w - int(Inches(0.3))
         tx = cx - tw // 2
-        ny = cy + r + int(Inches(0.55))
-        _text(slide, Emu(tx), Emu(ny), Emu(tw), Inches(0.55),
+        ny = cy + r + int(Inches(0.42))
+        num_h, head_h = int(Inches(0.5)), int(Inches(0.34))
+        _text(slide, Emu(tx), Emu(ny), Emu(tw), Emu(num_h),
               [[("%02d" % (i + 1), {"size": Pt(26), "bold": True,
                                     "color": T.AZUL_OSCURO,
                                     "font": T.FONT_NUM})]],
               align=PP_ALIGN.CENTER)
-        _text(slide, Emu(tx), Emu(ny + int(Inches(0.6))), Emu(tw), Inches(0.4),
+        hy = ny + num_h + int(Inches(0.04))
+        _text(slide, Emu(tx), Emu(hy), Emu(tw), Emu(head_h),
               [[(head_txt, {"size": Pt(14), "color": T.AZUL_OSCURO,
                             "font": T.FONT_HEAD})]], align=PP_ALIGN.CENTER)
-        _text(slide, Emu(tx), Emu(ny + int(Inches(1.05))), Emu(tw), Inches(0.9),
+        dy = hy + head_h + int(Inches(0.08))
+        _text(slide, Emu(tx), Emu(dy), Emu(tw),
+              Emu(max(int(Inches(0.4)), int(T.SLIDE_H) - int(Inches(0.7)) - dy)),
               [[(text, {"size": Pt(11), "color": T.GRIS_SUAVE,
                         "font": T.FONT_BODY})]], align=PP_ALIGN.CENTER,
-              line_spacing=1.3)
+              line_spacing=1.28)
 
     _pagenum(slide, page)
     return slide
