@@ -506,26 +506,32 @@ def _fmt_miles(entero):
     return ".".join(grupos)
 
 
-def _fmt_eur(valor):
-    """Importe en es-ES: 1300 -> '1.300 EUR'; 1300.5 -> '1.300,50 EUR'.
+def _centimos(valor):
+    """Importe -> centimos enteros. Redondear aqui, una sola vez, es lo que
+    garantiza que el total nunca contradiga a la suma de las partidas."""
+    return int(round(float(valor) * 100))
 
-    (En el codigo EUR es el escape EURO; aqui se nombra asi por ser ASCII.)
-    Los enteros no llevan decimales; los decimales van con coma y dos cifras.
-    """
-    negativo = valor < 0
-    v = abs(valor)
-    entero = int(v)
-    centimos = int(round((float(v) - entero) * 100))
-    if centimos == 100:          # 1299.999 -> 1.300
-        entero += 1
-        centimos = 0
-    if entero == 0 and centimos == 0:
-        negativo = False          # -0.004 -> "0 EUR", no "-0 EUR"
-    if centimos:
-        cuerpo = "%s,%02d" % (_fmt_miles(entero), centimos)
+
+def _fmt_eur_centimos(centimos):
+    """Centimos enteros -> '1.300 EUR' / '1.300,50 EUR' (es-ES)."""
+    negativo = centimos < 0
+    c = abs(centimos)
+    entero, resto = divmod(c, 100)
+    if entero == 0 and resto == 0:
+        negativo = False
+    if resto:
+        cuerpo = "%s,%02d" % (_fmt_miles(entero), resto)
     else:
         cuerpo = _fmt_miles(entero)
     return "%s%s %s" % ("-" if negativo else "", cuerpo, EURO)
+
+
+def _fmt_eur(valor):
+    """Importe en es-ES: 1300 -> '1.300 EUR'; 1300.5 -> '1.300,50 EUR'.
+
+    Los enteros no llevan decimales; los decimales van con coma y dos cifras.
+    """
+    return _fmt_eur_centimos(_centimos(valor))
 
 
 def _split_rows(rows):
@@ -1952,7 +1958,8 @@ def _pricing_page(prs, title, rows, ordinal, subtitle, section, page,
     # El bloque resultante se centra verticalmente entre `top` y `bottom`.
     k = len(rows)
     gap_r = int(Inches(0.18))
-    row_h = min(ROW_H_MAX, (block_h - (k - 1) * gap_r) // k)
+    row_h = max(int(Inches(0.4)),
+                min(int(ROW_H_MAX), (block_h - (k - 1) * gap_r) // k))
     used_h = k * row_h + (k - 1) * gap_r
     rows_top = top + (block_h - used_h) // 2
 
@@ -2054,7 +2061,12 @@ def add_pricing(prs, title, rows, note="", total=None, subtitle="", page=None,
             "(page=n())")
 
     rows = [tuple(r) for r in rows]
-    texto_total = total if total is not None else _fmt_eur(sum(r[1] for r in rows))
+    if total is not None:
+        texto_total = total
+    else:
+        # Sumamos centimos ya redondeados: asi el total SIEMPRE coincide con la
+        # suma de los importes que se pintan en las filas.
+        texto_total = _fmt_eur_centimos(sum(_centimos(r[1]) for r in rows))
     paginas = _split_rows(rows)
     slides = []
     ordinal = 1

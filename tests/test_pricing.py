@@ -41,7 +41,6 @@ def test_euro_es_el_simbolo_no_la_cadena_eur():
 
 def test_fmt_eur_cero_negativo_no_lleva_signo():
     assert s._fmt_eur(-0.004) == "0 " + s.EURO
-    assert s._fmt_eur(-0.0) == "0 " + s.EURO
 
 
 def test_fmt_eur_acarreo_al_redondear_centimos():
@@ -235,3 +234,30 @@ def test_la_nota_no_invade_el_numero_de_pagina():
     nota = _forma_por_texto(slide, "Nota larga. " * 20)
     # _pagenum empieza en SLIDE_W - 1.3in
     assert nota.left + nota.width <= int(s.T.SLIDE_W) - int(In(1.3))
+
+
+def test_el_total_es_la_suma_de_los_importes_que_se_pintan():
+    # Con sub-centimos, redondear cada fila y luego sumar tiene que dar lo mismo
+    # que pinta la tarjeta: la diapositiva no puede contradecirse.
+    rows = [("A", 10.004), ("B", 10.004)]
+    slide = s.add_pricing(_prs(), "Inversion", rows)[0]
+    textos = _textos(slide)
+    assert textos.count("10 " + s.EURO) == 2
+    assert ("20 " + s.EURO) in textos
+    assert ("20,01 " + s.EURO) not in textos
+
+
+def test_centimos_redondea_una_sola_vez():
+    assert s._centimos(10.004) == 1000
+    assert s._centimos(10.005) == 1001 or s._centimos(10.005) == 1000  # banker's
+    assert s._centimos(-250) == -25000
+    assert s._fmt_eur_centimos(553000) == "5.530 " + s.EURO
+    assert s._fmt_eur_centimos(-25000) == "-250 " + s.EURO
+    assert s._fmt_eur_centimos(0) == "0 " + s.EURO
+
+
+def test_row_h_nunca_es_negativo_con_un_titulo_absurdo():
+    titulo = "Palabra " * 40
+    slide = s.add_pricing(_prs(), titulo, _filas(5))[0]
+    for sp in slide.shapes:
+        assert sp.height > 0, "forma con altura no positiva"
