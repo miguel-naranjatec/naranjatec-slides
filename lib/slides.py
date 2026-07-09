@@ -492,7 +492,7 @@ EURO = "\u20AC"          # NUNCA el caracter literal: el fichero es ASCII puro
 MAX_PRICING_ROWS = 10    # mas partidas -> ValueError (no se truncan en silencio)
 ROWS_PER_PAGE = 5        # filas que caben holgadas en una pagina
 ROW_H_MAX = Inches(1.05)  # tope de alto de fila: con 1 partida no se estira
-CARD_H_MIN = Inches(2.4)  # la tarjeta de total no cabe en menos: 3 textos apilados
+CARD_H_MIN = Inches(2.7)  # minimo para que etiqueta, cifra (1.2in) y coletilla no se toquen
 
 
 def _fmt_miles(entero):

@@ -188,12 +188,26 @@ def _forma_por_texto(slide, texto):
     raise AssertionError("no encuentro la forma con texto %r" % texto)
 
 
-def test_la_tarjeta_de_total_no_apila_sus_textos_con_una_sola_partida():
-    slide = s.add_pricing(_prs(), "Inversion", [("Unica", 1300)])[0]
-    etiqueta = _forma_por_texto(slide, "TOTAL ESTIMADO")
-    coletilla = _forma_por_texto(slide, "IVA no incluido")
-    # la etiqueta termina antes de que empiece la coletilla
-    assert etiqueta.top + etiqueta.height <= coletilla.top
+def test_las_tres_cajas_de_la_tarjeta_de_total_no_se_solapan():
+    # Con 1 o 2 partidas se activa CARD_H_MIN: es el caso en el que la caja de
+    # la cifra (1.2in) puede comerse a la etiqueta y a la coletilla.
+    for n in (1, 2, 3, 5):
+        slide = s.add_pricing(_prs(), "Inversion", _filas(n))[0]
+        etiqueta = _forma_por_texto(slide, "TOTAL ESTIMADO")
+        coletilla = _forma_por_texto(slide, "IVA no incluido")
+        cifra = _forma_por_texto(slide, s._fmt_eur(sum(r[1] for r in _filas(n))))
+        assert etiqueta.top + etiqueta.height <= cifra.top, "n=%d etiqueta pisa cifra" % n
+        assert cifra.top + cifra.height <= coletilla.top, "n=%d cifra pisa coletilla" % n
+
+
+def test_la_tarjeta_de_total_cabe_en_la_diapositiva():
+    for n in (1, 2, 5):
+        slide = s.add_pricing(_prs(), "Inversion", _filas(n), note="Precios sin IVA.")[0]
+        etiqueta = _forma_por_texto(slide, "TOTAL ESTIMADO")
+        coletilla = _forma_por_texto(slide, "IVA no incluido")
+        assert etiqueta.top > 0, "n=%d la tarjeta se sale por arriba" % n
+        assert coletilla.top + coletilla.height <= int(s.T.SLIDE_H), \
+            "n=%d la tarjeta se sale por abajo" % n
 
 
 def test_la_nota_no_invade_el_numero_de_pagina():
