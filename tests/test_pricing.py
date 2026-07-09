@@ -181,11 +181,26 @@ def test_importes_negativos_restan_del_total():
     assert ("750 " + s.EURO) in textos
 
 
+def _formas_por_texto(slide, texto):
+    return [sp for sp in slide.shapes
+            if sp.has_text_frame and sp.text_frame.text == texto]
+
+
 def _forma_por_texto(slide, texto):
-    for sp in slide.shapes:
-        if sp.has_text_frame and sp.text_frame.text == texto:
-            return sp
-    raise AssertionError("no encuentro la forma con texto %r" % texto)
+    formas = _formas_por_texto(slide, texto)
+    if not formas:
+        raise AssertionError("no encuentro la forma con texto %r" % texto)
+    return formas[0]
+
+
+def _forma_en_la_tarjeta(slide, texto):
+    """La tarjeta de total vive en la columna derecha. Con una sola partida, el
+    total coincide con el importe de esa fila y hay DOS formas con el mismo
+    texto: nos quedamos con la de mas a la derecha."""
+    formas = _formas_por_texto(slide, texto)
+    if not formas:
+        raise AssertionError("no encuentro la forma con texto %r" % texto)
+    return max(formas, key=lambda sp: sp.left)
 
 
 def test_las_tres_cajas_de_la_tarjeta_de_total_no_se_solapan():
@@ -193,9 +208,12 @@ def test_las_tres_cajas_de_la_tarjeta_de_total_no_se_solapan():
     # la cifra (1.2in) puede comerse a la etiqueta y a la coletilla.
     for n in (1, 2, 3, 5):
         slide = s.add_pricing(_prs(), "Inversion", _filas(n))[0]
-        etiqueta = _forma_por_texto(slide, "TOTAL ESTIMADO")
-        coletilla = _forma_por_texto(slide, "IVA no incluido")
-        cifra = _forma_por_texto(slide, s._fmt_eur(sum(r[1] for r in _filas(n))))
+        etiqueta = _forma_en_la_tarjeta(slide, "TOTAL ESTIMADO")
+        coletilla = _forma_en_la_tarjeta(slide, "IVA no incluido")
+        cifra = _forma_en_la_tarjeta(slide, s._fmt_eur(sum(r[1] for r in _filas(n))))
+        # la cifra tiene que estar en la columna de la tarjeta, no en una fila
+        assert cifra.left > int(s.MARGIN) + int(s.CONTENT_W) // 2, \
+            "n=%d la cifra localizada no esta en la tarjeta" % n
         assert etiqueta.top + etiqueta.height <= cifra.top, "n=%d etiqueta pisa cifra" % n
         assert cifra.top + cifra.height <= coletilla.top, "n=%d cifra pisa coletilla" % n
 
@@ -203,8 +221,8 @@ def test_las_tres_cajas_de_la_tarjeta_de_total_no_se_solapan():
 def test_la_tarjeta_de_total_cabe_en_la_diapositiva():
     for n in (1, 2, 5):
         slide = s.add_pricing(_prs(), "Inversion", _filas(n), note="Precios sin IVA.")[0]
-        etiqueta = _forma_por_texto(slide, "TOTAL ESTIMADO")
-        coletilla = _forma_por_texto(slide, "IVA no incluido")
+        etiqueta = _forma_en_la_tarjeta(slide, "TOTAL ESTIMADO")
+        coletilla = _forma_en_la_tarjeta(slide, "IVA no incluido")
         assert etiqueta.top > 0, "n=%d la tarjeta se sale por arriba" % n
         assert coletilla.top + coletilla.height <= int(s.T.SLIDE_H), \
             "n=%d la tarjeta se sale por abajo" % n
