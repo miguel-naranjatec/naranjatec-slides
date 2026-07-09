@@ -114,8 +114,9 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
   (mas -> `ValueError`, NO trunca como `add_bullets`). El total se SUMA solo;
   `total=` solo acepta un `str` para forzar texto ("A convenir").
   **MULTIPAGINA**: con 6-10 partidas genera 2 slides (la 1a a ancho completo, sin
-  tarjeta) y devuelve SIEMPRE una lista. `page` recibe el CONTADOR (`page=n`), no
-  su valor (`page=n()`): unica excepcion de la libreria.
+  tarjeta); el total Y la nota al pie van solo en la ultima. Devuelve SIEMPRE una
+  lista. `page` recibe el CONTADOR (`page=n`), no su valor (`page=n()`): unica
+  excepcion de la libreria.
 
 ## Convenciones de contenido
 
@@ -131,10 +132,9 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
   dict `ICON_NAMES` de `scripts/make_icon_font.py` y regenerar.
 - Subtitulos serif: pasar `subtitle="..."` (Playfair italica) en los layouts que lo
   aceptan.
-- Numero de pagina: usar un contador `n()` como en los ejemplos; los separadores de
-  seccion y el timeline NO llevan `page`.
-- Excepciones de `page`: los separadores y `add_timeline` NO lo llevan;
-  `add_pricing` recibe la FUNCION contador (`page=n`), no su valor.
+- Numero de pagina: usar un contador `n()` como en los ejemplos; los separadores
+  de seccion y `add_timeline` NO llevan `page`. Unica excepcion inversa:
+  `add_pricing` recibe la FUNCION contador (`page=n`), no su valor (`page=n()`).
 
 ## Regla de codificacion (IMPORTANTE)
 

@@ -46,9 +46,11 @@ Que tocar y que no:
 - `content/` es tuyo: son datos, no logica.
 - `lib/slides.py` es maquetacion compartida y `brand/theme.py` es la marca. Un
   cambio ahi afecta a TODOS los decks: es una decision deliberada.
-- Dos topes que sorprenden: `add_bullets` pinta como maximo 4 elementos y
+- Topes que sorprenden: `add_bullets` pinta como maximo 4 elementos y
   `add_process` es una rejilla 2x2 (tambien 4). Si el contenido no cabe, fusiona
   o cambia de layout (`add_service_grid` admite 9).
+- Un tercer tope que revienta en vez de recortar: `add_pricing` admite un maximo
+  de 10 partidas; mas alla lanza `ValueError` en lugar de truncar en silencio.
 - Codificacion: el codigo y el deck de test van en ASCII puro; los decks de
   cliente llevan acentos y ene reales, porque son entregables.
 
