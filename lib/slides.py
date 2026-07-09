@@ -1965,7 +1965,10 @@ def _pricing_page(prs, title, rows, ordinal, subtitle, section, page,
 
     badge = int(Inches(0.34))
     pad = int(Inches(0.28))
-    amount_w = int(Inches(2.3))
+    # 1.9in basta: el importe mas largo imaginable ("999.999,99 EUR" en Geist
+    # Mono a 15pt) mide 1.75in. Lo que sobra es ancho para el concepto, que es
+    # quien envuelve a dos lineas.
+    amount_w = int(Inches(1.9))
     concept_x = int(MARGIN) + pad + badge + pad
     concept_w = int(MARGIN) + rows_w - amount_w - int(Inches(0.5)) - concept_x
 

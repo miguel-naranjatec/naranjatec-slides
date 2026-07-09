@@ -221,26 +221,24 @@ def build(prs):
     )
 
     # 14) DESGLOSE DEL PROYECTO
-    s.add_bullets(
+    # Las cinco partidas del documento de propuesta, convertidas de horas a
+    # euros (150 €/hora). El deck habla en euros: las horas no se muestran.
+    # El total lo suma add_pricing, asi que no puede desviarse de las filas.
+    # OJO: add_pricing recibe el contador `n`, no `n()`.
+    s.add_pricing(
         prs,
-        "Desglose del proyecto",
+        "Desglose del *proyecto*",
         [
-            ("Estructura y elementos comunes - 8h",
-             "Header con CTA, footer, sistema 'Solicitar información' y "
-             "multi-idioma.", T.ICON["gear"]),
-            ("Propiedades, contenido y buscador - 8h",
-             "Cartera propia, taxonomías de zona y tipo, testimonios y buscador "
-             "a medida.", T.ICON["server"]),
-            ("Integración con Resales Online - 6h",
-             "Importación y sincronización automática con imágenes en local.",
-             T.ICON["sync"]),
-            ("Bloques de contenido - 12.5h",
-             "La biblioteca de 20 piezas con la que se monta toda la web.",
-             T.ICON["code"]),
+            ("Estructura y elementos comunes", 1200),
+            ("Propiedades y contenido gestionable", 750),
+            ("Integración con Resales Online", 900),
+            ("Buscador de propiedades", 450),
+            ("Bloques de contenido", 1875),
         ],
-        image=T.img("springvale-home.jpg"),
-        subtitle="34.5h en total; con ampliaciones opcionales disponibles",
-        page=n(),
+        note="Las ampliaciones opcionales (búsquedas guardadas y alertas, "
+             "reseñas de Google) se presupuestan aparte.",
+        subtitle="Lo que incluye el desarrollo, partida a partida",
+        page=n,
         section="El proyecto",
     )
 
