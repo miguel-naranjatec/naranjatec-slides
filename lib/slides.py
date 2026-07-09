@@ -2549,6 +2549,10 @@ def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
             "add_next_steps: %d pasos; admite entre 3 y 5." % len(steps))
 
     slide = _slide(prs)
+    # Textura de marca al fondo: el isotipo, tenue y difuminado. Va lo primero,
+    # para que quede detras de arcos, circulos y texto.
+    _decor(slide, Inches(9.9), Inches(-2.6), Inches(6.6), rotation=16, alpha=9000)
+    _decor(slide, Inches(-2.6), Inches(4.4), Inches(5.6), rotation=-20, alpha=7000)
     _topbar(slide, section)
     tb = _title(slide, title, y=Inches(1.35))
     top = max(int(Inches(2.35)), int(tb) + int(GAP_AFTER_TITLE))
@@ -2577,10 +2581,12 @@ def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
         arriba = (i % 2 == 0)
         mid = (cx_a + cx_b) // 2
         rad = (cx_b - cx_a) / 2.0
-        color = T.GRIS_BORDE if arriba else T.AZUL_OSCURO
+        # Todos los arcos del mismo gris tenue: son un apoyo, no un elemento.
+        color = T.GRIS_BORDE
         rx = (cx_b - cx_a) / 2.0
         ry = min(rx, float(ry_max))              # altura topada: ver _arc_band
-        t0 = _arc_t0(rx, ry, r + int(Inches(0.06)))
+        # Holgura entre el final del arco y el borde del circulo.
+        t0 = _arc_t0(rx, ry, r + int(Inches(0.2)))
         ex, ey = _arc_band(slide, mid, cy, rx, ry, thick, arriba, color, t0=t0)
         # Tangente de la ELIPSE en el extremo: el triangulo apunta al circulo.
         dx, dy = rx * math.sin(t0), ry * math.cos(t0)
@@ -2600,7 +2606,7 @@ def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
         tw = col_w - int(Inches(0.3))
         tx = cx - tw // 2
         ny = cy + r + int(Inches(0.42))
-        num_h, head_h = int(Inches(0.5)), int(Inches(0.34))
+        num_h, head_h = int(Inches(0.5)), int(Inches(0.3))
         _text(slide, Emu(tx), Emu(ny), Emu(tw), Emu(num_h),
               [[("%02d" % (i + 1), {"size": Pt(26), "bold": True,
                                     "color": T.AZUL_OSCURO,
@@ -2610,7 +2616,8 @@ def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
         _text(slide, Emu(tx), Emu(hy), Emu(tw), Emu(head_h),
               [[(head_txt, {"size": Pt(14), "color": T.AZUL_OSCURO,
                             "font": T.FONT_HEAD})]], align=PP_ALIGN.CENTER)
-        dy = hy + head_h + int(Inches(0.08))
+        # Titular y descripcion son una pareja: gap minimo entre ambos.
+        dy = hy + head_h
         _text(slide, Emu(tx), Emu(dy), Emu(tw),
               Emu(max(int(Inches(0.4)), int(T.SLIDE_H) - int(Inches(0.7)) - dy)),
               [[(text, {"size": Pt(11), "color": T.GRIS_SUAVE,
