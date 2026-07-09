@@ -1954,13 +1954,13 @@ def _pricing_page(prs, title, rows, ordinal, subtitle, section, page,
     gap_col = int(Inches(0.5))
     rows_w = int(0.60 * int(CONTENT_W)) if con_total else int(CONTENT_W)
 
-    # Alto de fila topado: sin el tope, una sola partida ocuparia todo el hueco.
-    # El bloque resultante se centra verticalmente entre `top` y `bottom`.
+    # Filas contiguas separadas por una linea fina (no tarjetas que flotan): las
+    # partidas de un presupuesto se leen como una tabla, no como piezas sueltas.
+    # Sin hueco entre filas, la linea es el unico separador.
     k = len(rows)
-    gap_r = int(Inches(0.18))
-    row_h = max(int(Inches(0.4)),
-                min(int(ROW_H_MAX), (block_h - (k - 1) * gap_r) // k))
-    used_h = k * row_h + (k - 1) * gap_r
+    gap_r = 0
+    row_h = max(int(Inches(0.4)), min(int(ROW_H_MAX), block_h // k))
+    used_h = k * row_h
     rows_top = top + (block_h - used_h) // 2
 
     badge = int(Inches(0.34))
@@ -1969,23 +1969,22 @@ def _pricing_page(prs, title, rows, ordinal, subtitle, section, page,
     # Mono a 15pt) mide 1.75in. Lo que sobra es ancho para el concepto, que es
     # quien envuelve a dos lineas.
     amount_w = int(Inches(1.9))
-    concept_x = int(MARGIN) + pad + badge + pad
+    concept_x = int(MARGIN) + badge + pad
     concept_w = int(MARGIN) + rows_w - amount_w - int(Inches(0.5)) - concept_x
 
+    # Linea superior de la tabla.
+    _rect(slide, MARGIN, Emu(rows_top), Emu(rows_w), Pt(1), fill=T.GRIS_BORDE)
     for i, (concepto, importe) in enumerate(rows):
-        y = rows_top + i * (row_h + gap_r)
-        card = _rect(slide, MARGIN, Emu(y), Emu(rows_w), Emu(row_h),
-                     fill=T.BLANCO, shape=MSO_SHAPE.ROUNDED_RECTANGLE,
-                     radius=0.06)
-        _soft_shadow(card, alpha=10000)
-        _num_badge(slide, Emu(int(MARGIN) + pad),
-                   Emu(y + (row_h - badge) // 2), Emu(badge),
+        y = rows_top + i * row_h
+        _num_badge(slide, MARGIN, Emu(y + (row_h - badge) // 2), Emu(badge),
                    "%d" % (ordinal + i))
+        _rect(slide, MARGIN, Emu(y + row_h), Emu(rows_w), Pt(1),
+              fill=T.GRIS_BORDE)
         _text(slide, Emu(concept_x), Emu(y), Emu(concept_w), Emu(row_h),
               [[(concepto, {"size": Pt(14.5), "color": T.AZUL_OSCURO,
                             "font": T.FONT_HEAD})]],
               anchor=MSO_ANCHOR.MIDDLE)
-        _text(slide, Emu(int(MARGIN) + rows_w - amount_w - int(Inches(0.35))),
+        _text(slide, Emu(int(MARGIN) + rows_w - amount_w - int(Inches(0.25))),
               Emu(y), Emu(amount_w), Emu(row_h),
               [[(_fmt_eur(importe), {"size": Pt(15), "bold": True,
                                      "color": T.AZUL_OSCURO,
