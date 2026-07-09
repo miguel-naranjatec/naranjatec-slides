@@ -37,3 +37,13 @@ def test_fmt_eur_negativo_para_descuentos():
 
 def test_euro_es_el_simbolo_no_la_cadena_eur():
     assert s.EURO == "\u20AC"
+
+
+def test_fmt_eur_cero_negativo_no_lleva_signo():
+    assert s._fmt_eur(-0.004) == "0 " + s.EURO
+    assert s._fmt_eur(-0.0) == "0 " + s.EURO
+
+
+def test_fmt_eur_acarreo_al_redondear_centimos():
+    assert s._fmt_eur(1299.999) == "1.300 " + s.EURO
+    assert s._fmt_eur(0.999) == "1 " + s.EURO

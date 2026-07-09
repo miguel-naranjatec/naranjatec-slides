@@ -518,6 +518,8 @@ def _fmt_eur(valor):
     if centimos == 100:          # 1299.999 -> 1.300
         entero += 1
         centimos = 0
+    if entero == 0 and centimos == 0:
+        negativo = False          # -0.004 -> "0 EUR", no "-0 EUR"
     if centimos:
         cuerpo = "%s,%02d" % (_fmt_miles(entero), centimos)
     else:
