@@ -235,11 +235,27 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
 
 ## Flujo "documento -> deck" (para decks de cliente)
 
-`content/nereidas.py` es el ejemplo canonico: dado un `.md` de propuesta, se mapean
-sus secciones a layouts (portada, indice, separadores, statement, service_grid,
-image_feature, two_column, process, stats, bullets, cta) y se redacta copy conciso
-de presentacion (no parrafos enteros). Imagenes: usar la biblioteca como placeholder
-y avisar al usuario de que conviene sustituirlas por fotos reales del cliente.
+**Usa el skill `propuesta-a-deck`** (`.claude/skills/propuesta-a-deck/SKILL.md`):
+lleva el proceso entero y, sobre todo, las preguntas que NO se pueden saltar. En
+resumen:
+
+1. Preguntar primero si hay documento de partida (`.md`, `.txt`, `.pdf`) y leerlo
+   ENTERO antes de nada. No se copia al repo: lleva tarifas y datos de cliente.
+2. Valorar si el documento sostiene el arco **problema -> solucion -> propuesta ->
+   presupuesto -> proximos pasos**, y entregar ese juicio (cubierto / flojo /
+   ausente por acto) ANTES de escribir codigo.
+3. Elegir los layouts por la FORMA del contenido, no por su titulo, buscando
+   variedad. No hay guion fijo: `content/nereidas.py` es un ejemplo, no la plantilla.
+4. Elegir los bloques de pagina que el documento justifica, uno a uno
+   (`python scripts/gen_blocks.py --list`). Nunca los 106, nunca por sector.
+5. Si el documento trae HORAS, preguntar la tarifa: nunca inventarla. Y horas y
+   euros no conviven en el mismo deck (se deduce la tarifa dividiendo).
+6. Los huecos: preguntar cuando el dato existe y el usuario lo tiene (un telefono);
+   cambiar de layout cuando el dato no existe (no hay testimonio -> no `add_quote`).
+   Nunca inventarlo. Todas las preguntas, en una sola ronda.
+
+Imagenes: usar la biblioteca como placeholder y avisar al usuario de que conviene
+sustituirlas por fotos reales del cliente. Nunca se piden logos ni fotos.
 
 ## Marca (resumen)
 

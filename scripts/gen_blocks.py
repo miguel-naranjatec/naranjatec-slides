@@ -9,6 +9,7 @@ el resultado siguen siendo .svg de verdad, reutilizables fuera de este repo
 Uso:
     python scripts/gen_blocks.py            # escribe brand/assets/blocks/*.svg
     python scripts/make_blocks.py           # y luego los rasteriza a PNG
+    python scripts/gen_blocks.py --list     # lista el catalogo, sin escribir nada
 
 Lienzo: viewBox 320x180 (16:9), sin fondo. Los esquemas se leen a 2 cm de ancho,
 asi que no llevan texto: solo barras que sugieren texto.
@@ -1476,7 +1477,19 @@ CABECERA = (
 )
 
 
+def listar():
+    """Imprime el catalogo agrupado. Para elegir bloques sin leerse el dibujo."""
+    for categoria, grupo in CATALOGO:
+        print("%s (%d)" % (categoria, len(grupo)))
+        for slug in sorted(grupo):
+            print("  %s" % slug)
+    print("\n%d bloques en %d categorias." % (len(BLOCKS), len(CATALOGO)))
+    return 0
+
+
 def main(argv):
+    if "--list" in argv or "-l" in argv:
+        return listar()
     DST.mkdir(parents=True, exist_ok=True)
     for slug, dibujar in sorted(BLOCKS.items()):
         svg = (CABECERA % (W, H, W, H, slug)) + dibujar() + "\n</svg>\n"

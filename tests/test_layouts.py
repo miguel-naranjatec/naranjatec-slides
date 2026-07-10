@@ -5,6 +5,7 @@ Aqui solo se fijan los limites que, si se rompen en silencio, hacen perder
 contenido (un producto adicional, un punto de la solucion).
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -243,3 +244,31 @@ def test_cada_svg_generado_corresponde_a_un_bloque_del_catalogo():
     g = _gen_blocks()
     svgs = {p.stem for p in T.BLOCKS_SRC.glob("*.svg")}
     assert svgs == set(g.BLOCKS), "descuadre: %s" % sorted(svgs ^ set(g.BLOCKS))
+
+
+# --- el skill propuesta-a-deck --------------------------------------------
+# El skill le dice a la IA que layouts y que bloques usar. Si uno se renombra o
+# se borra, el skill sigue recomendandolo y el deck revienta al construirse.
+
+SKILL = (Path(__file__).resolve().parent.parent / ".claude" / "skills" /
+         "propuesta-a-deck" / "SKILL.md")
+
+_SLUG = re.compile(r"`([a-z][a-z0-9]*(?:-[a-z0-9]+)+)`")
+_LAYOUT = re.compile(r"`(add_[a-z_]+)`")
+
+
+def test_el_skill_solo_cita_layouts_que_existen():
+    citados = set(_LAYOUT.findall(SKILL.read_text(encoding="utf-8")))
+    assert citados, "el skill no cita ningun layout"
+    faltan = sorted(nombre for nombre in citados if not hasattr(s, nombre))
+    assert faltan == [], "el skill cita layouts inexistentes: %s" % faltan
+
+
+def test_el_skill_solo_cita_bloques_que_existen():
+    texto = SKILL.read_text(encoding="utf-8")
+    g = _gen_blocks()
+    # El skill nombra su propio slug en el frontmatter; no es un bloque.
+    citados = set(_SLUG.findall(texto)) - {"propuesta-a-deck"}
+    assert citados, "el skill no cita ningun bloque"
+    faltan = sorted(slug for slug in citados if slug not in g.BLOCKS)
+    assert faltan == [], "el skill cita bloques inexistentes: %s" % faltan
