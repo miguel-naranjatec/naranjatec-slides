@@ -253,14 +253,37 @@ y cargo. Jamas se inventa una cita ni se atribuye a un cliente algo que no dijo.
 Estas preguntas van en la **ronda unica del paso 4**, junto a las fijas, el idioma
 y el tono. Nunca goteando.
 
-La imagen es la excepcion: **no se pide nunca**. `brand/assets/img/` es la
-biblioteca de imagenes PROPIAS de NaranjaTec (mockups de webs del estudio, fotos
-de la oficina): son material legitimo del documento, no relleno provisional. Se
-elige de ahi la que encaje y no hay nada que disculpar ni que avisar.
+## Paso 7b. Las imagenes: elegir con el catalogo, y ADVERTIR
 
-Distinto es que el cliente aporte material suyo (fotos de sus propiedades, de sus
-platos, de su equipo): entonces vende mas y se usa. Pero eso lo trae el, no se
-pide como requisito para generar el deck.
+`brand/assets/img/` es la biblioteca PROPIA del estudio. Pero no es un banco de
+imagenes por temas: **son mockups de las webs que hemos hecho**, montadas en
+portatiles y moviles, mas fotos de la oficina y algunos logos. Por eso
+`pighen-store.jpg` no es una tienda: es la web de Pig&Hen, y lo que se ve son
+pulseras. Elegir por el nombre del fichero es como se cuela una portada de
+pulseras en una propuesta de chocolate.
+
+Usa el catalogo, que dice de que sector es la web que aparece en cada pantalla:
+
+```
+python brand/imagenes.py --list                 # sectores y cuantas hay de cada uno
+python brand/imagenes.py --sector alimentacion  # las de ese sector, y la advertencia
+```
+
+```python
+import brand.imagenes as IM
+IM.buscar(sector="moda", tipo="portatil")
+print(IM.advertencia("alimentacion"))
+```
+
+**Advierte siempre, al entregar el deck.** `IM.advertencia(sector)` no calla nunca,
+y por una razon: en esta biblioteca **no hay fotografia de producto de ningun
+sector**. Ni chocolate, ni un obrador, ni un escaparate. Di al usuario que
+imagenes has elegido, de que sector es cada una, y que si el cliente aporta fotos
+suyas el deck cambia de nivel.
+
+Lo que NO se hace: pedirle logos y fotos como requisito para generar el deck, ni
+bajar imagenes de un banco sin que el usuario lo pida. Las neutras (oficina,
+escritorios, planos de portatil) son material legitimo y con ellas se entrega.
 
 ## Paso 8. Escribir el deck
 

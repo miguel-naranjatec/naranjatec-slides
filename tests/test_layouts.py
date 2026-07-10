@@ -246,6 +246,46 @@ def test_cada_svg_generado_corresponde_a_un_bloque_del_catalogo():
     assert svgs == set(g.BLOCKS), "descuadre: %s" % sorted(svgs ^ set(g.BLOCKS))
 
 
+# --- catalogo de imagenes (brand/imagenes.py) ------------------------------
+
+def _imagenes():
+    import brand.imagenes
+    return brand.imagenes
+
+
+def test_ninguna_imagen_se_queda_sin_catalogar():
+    # Si alguien mete una foto nueva y no la etiqueta, el agente la elegiria a
+    # ciegas por el nombre del fichero. Que es como una propuesta de chocolate
+    # acabo con una portada de pulseras.
+    IM = _imagenes()
+    huerfanas = [r for r, s, _, _ in IM.catalogo() if s == "desconocido"]
+    assert huerfanas == [], "sin sector: %s" % huerfanas
+
+
+def test_el_catalogo_cubre_todas_las_imagenes_del_disco():
+    IM = _imagenes()
+    en_disco = len(list(IM.IMG_DIR.rglob("*.jpg")))
+    assert len(IM.catalogo()) == en_disco
+
+
+def test_la_advertencia_nunca_calla():
+    # Aunque un sector tenga mockups, sigue sin haber foto de producto: la
+    # funcion siempre tiene algo que decir, y lo dice.
+    IM = _imagenes()
+    assert IM.HAY_FOTOGRAFIA_DE_PRODUCTO is False
+    for s in IM.sectores():
+        aviso = IM.advertencia(s)
+        assert aviso and "mockup" in aviso.lower(), s
+
+
+def test_buscar_filtra_por_sector_y_tipo():
+    IM = _imagenes()
+    assert "importaco-macbookpro.jpg" in IM.buscar(sector="alimentacion")
+    assert IM.buscar(sector="alimentacion", tipo="logo") == []
+    assert all("vielong" in r for r in IM.buscar(sector="cosmetica"))
+    assert IM.buscar(sector="sector-que-no-existe") == []
+
+
 # --- diapositivas fijas (content/fijas.py) ---------------------------------
 
 def _fijas():

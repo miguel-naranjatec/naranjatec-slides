@@ -268,11 +268,16 @@ resumen:
    cambiar de layout cuando el dato no existe (no hay testimonio -> no `add_quote`).
    Nunca inventarlo. Todas las preguntas, en una sola ronda.
 
-Imagenes: `brand/assets/img/` es la biblioteca PROPIA de NaranjaTec (mockups de
-webs del estudio, fotos de la oficina). Es material legitimo del documento, no
-relleno provisional: se elige la que encaje y no hay nada que disculpar. Nunca se
-piden logos ni fotos al usuario. Si el cliente aporta material suyo, mejor, pero
-no es requisito para generar el deck.
+Imagenes: `brand/assets/img/` es la biblioteca PROPIA de NaranjaTec, pero NO es un
+banco por temas: son mockups de las webs del estudio dentro de portatiles y
+moviles, fotos de la oficina y algunos logos. `pighen-store.jpg` no es una tienda,
+es la web de Pig&Hen (pulseras). Elegir por el nombre del fichero es como acabas
+poniendo pulseras en una propuesta de chocolate.
+
+Usa `brand/imagenes.py` (`--list`, `--sector X`, `IM.buscar()`), que etiqueta cada
+imagen con el SECTOR de la web que se ve. `IM.advertencia(sector)` no calla nunca:
+aqui no hay fotografia de producto de ningun sector. Se entrega con las neutras y
+se AVISA. Nunca se piden logos ni fotos como requisito.
 
 ## Marca (resumen)
 

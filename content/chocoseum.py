@@ -36,7 +36,7 @@ def build(prs):
         title="La tienda que Chocoseum *merece*",
         subtitle="Quince años, 56 premios y 220.000 clientes. Una tienda a su altura.",
         eyebrow="NaranjaTec - Propuesta",
-        image=T.img("pighen-store.jpg"),
+        image=T.img("sunfer-mockup.jpg"),
     )
 
     # 2) INDICE
@@ -62,7 +62,7 @@ def build(prs):
         prs,
         "Cada visita que entra por un anuncio y se va sin comprar es *dinero "
         "gastado dos veces*: se pagó por traerla y no dejó nada.",
-        image=T.img("babidu-store.jpg"),
+        image=T.img("ecco-night.jpg"),
         page=n(),
     )
 
@@ -104,7 +104,7 @@ def build(prs):
             {"value": "4,8", "label": "de valoración media sobre 5",
              "icon": T.ICON["star"]},
         ],
-        image=T.img("babidu-macbook.jpg"),
+        image=T.img("springvale-home.jpg"),
         subtitle="Argumentos que hoy no trabajan a favor de la marca",
         page=n(), section="El problema",
     )
@@ -363,7 +363,7 @@ def build(prs):
         "Hablemos de tu *tienda*",
         F.contacto_cta(),
         subtext="Quince años de chocolate merecen una tienda que los cuente.",
-        image=T.img("pighen-new-mac.jpg"),
+        image=T.img("oficina/naranjatec_4245.jpg"),
     )
 
     return prs
