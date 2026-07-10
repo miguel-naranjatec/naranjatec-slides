@@ -44,7 +44,7 @@ documento y decide, acto por acto, si hay material para sostenerlo.
 | Solucion | Que se propone y por que resuelve ese dolor | Es el nucleo. Si falta, el documento no es una propuesta: avisar al usuario y parar. |
 | Propuesta | El alcance: que se construye, con que piezas | Si el documento solo trae generalidades, el deck sale flojo. Decirlo, no maquillarlo. |
 | Presupuesto | Partidas con importe (o con horas + tarifa) | Se omite el acto. Un deck sin precio es legitimo. |
-| Proximos pasos | Que pasa despues de decir que si | Casi nunca esta en el documento. Proponer el proceso estandar (aprobacion, descubrimiento, desarrollo, contenidos, lanzamiento) con `add_next_steps`, y marcarlo como propuesto por la IA. |
+| Proximos pasos | Que pasa despues de decir que si | Casi nunca esta en el documento, y no hace falta: es una diapositiva FIJA (`proximos-pasos`, paso 4). |
 
 **Entrega este juicio ANTES de escribir codigo**, con un veredicto por acto:
 cubierto / flojo / ausente. Es lo primero que el usuario ve, y donde se decide si
@@ -97,7 +97,73 @@ Si dos secciones piden el mismo layout, mira si una admite su primo:
 Primero encaja, luego varia. La variedad nunca justifica un layout que no case con
 la forma del contenido.
 
-## Paso 4. Los bloques de pagina (el acto "propuesta")
+## Paso 4. La ronda de preguntas (una sola, antes de generar nada)
+
+Todo lo que hay que preguntar se pregunta AQUI, junto, con AskUserQuestion. Nunca
+goteando. Son cuatro, y ninguna se salta:
+
+### 4a. Diapositivas fijas (checkbox)
+
+Un deck mezcla dos cosas: lo que sale del documento del cliente, y lo que ponemos
+nosotros siempre igual. Lo segundo vive en `content/fijas.py`:
+
+```
+python content/fijas.py --list
+```
+
+Hoy hay dos (`mision`, `proximos-pasos`), y el registro crece. Pregunta cuales
+incluir con **multiSelect, marcando las de `defecto`**. No las des por incluidas
+ni por excluidas.
+
+Cada fija declara el `acto` del arco donde encaja: `mision` en la solucion,
+`proximos-pasos` al final. Se insertan ahi, no donde caigan. Se importan, no se
+copian:
+
+```python
+import content.fijas as F
+F.mision(prs, page=n(), section="La solucion")
+F.proximos_pasos(prs, page=n(), section="Siguiente")
+```
+
+Ambas admiten adaptacion sin dejar de ser fijas: los titulares de `PASOS` no se
+tocan, pero su descripcion si, y cabe sustituir una fase por otra (una migracion,
+una formacion) mientras no se pasen de 5. En `mision`, los `features` se reordenan
+o cambian segun lo que se ofrezca.
+
+Si el usuario pide una fija que no existe todavia, no la improvises dentro del
+deck: se anade como entrada nueva a `FIJAS`, y asi la tienen todos los decks.
+
+### 4b. Idioma
+
+Por defecto, **el del documento aportado**. Ofrece traducirlo (ingles, y el que el
+contexto sugiera: si el cliente es un hotel de la costa, aleman o frances).
+
+Si el deck no va en espanol, **las fijas tambien se traducen**: `F.proximos_pasos`
+acepta `title`, `subtitle` y `pasos`; `F.mision` acepta `title`, `features` y
+`caption`. Se traducen ahi, en la llamada, no editando `content/fijas.py`.
+
+### 4c. Tono
+
+**Deduce del documento 2 o 3 tonos que le vendrian bien** y ofrecelos. No es una
+pregunta generica: si el documento habla de fugas de ventas y comisiones perdidas,
+propon el tono que aproveche eso. La opcion marcada **por defecto es siempre "el
+del documento aportado"**: el cliente escribio como escribio, y respetarlo es lo
+seguro.
+
+Tonos que suelen encajar, para orientarse (no es una lista cerrada):
+
+- *Cercano y directo*: tutea, frases cortas, sin jerga. Para PYME.
+- *Tecnico y preciso*: cifras y nombres propios. Para un interlocutor tecnico.
+- *Institucional*: usted, tercera persona. Para administracion o consejo.
+- *Aspiracional*: habla del negocio que quieren tener, no del software.
+
+El tono afecta al copy, no a los layouts.
+
+### 4d. Datos: tarifa y contacto
+
+Ver los pasos 6 y 7. Van en esta misma ronda.
+
+## Paso 5. Los bloques de pagina (el acto "propuesta")
 
 Cuando el documento describe una WEB, la propuesta debe ensenar con que bloques se
 va a construir. Es la respuesta visual a "que se construye exactamente".
@@ -138,10 +204,10 @@ Y los que lleva casi cualquier web, salvo que el documento diga lo contrario:
 El slug debe existir en `brand/assets/blocks/png/`, o el deck revienta al
 construirse (no al abrirse).
 
-## Paso 5. La pregunta que nunca se salta: la tarifa
+## Paso 6. La pregunta que nunca se salta: la tarifa
 
 **Solo si el documento trae las partidas en horas, jornadas o puntos.** Entonces:
-a que tarifa se convierten a euros? NUNCA inventarla.
+a que tarifa se convierten a euros? NUNCA inventarla. Va en la ronda del paso 4.
 
 Y la regla que la acompana: **horas y euros no conviven en el mismo deck**. Si en
 una slide aparecen las horas y en otra los euros, basta dividir para deducir la
@@ -152,7 +218,7 @@ puede contradecir al desglose. No lo pases a mano.
 
 Si el documento ya viene en euros, aqui no hay nada que preguntar.
 
-## Paso 6. Los huecos: preguntar o cambiar de layout
+## Paso 7. Los huecos: preguntar o cambiar de layout
 
 Nunca inventar el dato. Entre las otras dos salidas, mira de que tipo es el hueco:
 
@@ -164,6 +230,11 @@ firma una cita. Es un dato, no una tarea.
 hitos con fecha, no hay presupuesto. Ahi preguntar es pedirle al usuario que se
 invente material.
 
+El contacto del cierre es el caso claro de "preguntar": a quien se dirige este
+deck. Si el usuario no lo dice, hay valores de casa en `content/fijas.py`
+(`rick@naranjatec.com`, `627 41 41 36`), y se usan con `F.contacto_cta()` o
+`F.contacto_thanks()` segun el layout de cierre. Un contacto inventado no.
+
 | Falta | En vez de | Usa |
 |---|---|---|
 | Testimonio con autor | `add_quote` | `add_statement` |
@@ -171,8 +242,8 @@ invente material.
 | Precios | `add_pricing` | omitir la slide |
 | Cifras duras | `add_stats` | `add_bullets`, `add_service_grid` |
 
-Todas las preguntas de los pasos 5 y 6 van **juntas, en una sola ronda**, al
-terminar el analisis. Nunca goteando.
+Estas preguntas van en la **ronda unica del paso 4**, junto a las fijas, el idioma
+y el tono. Nunca goteando.
 
 La imagen es la excepcion: **no se pide nunca**. `brand/assets/img/` es la
 biblioteca de imagenes PROPIAS de NaranjaTec (mockups de webs del estudio, fotos
@@ -183,7 +254,7 @@ Distinto es que el cliente aporte material suyo (fotos de sus propiedades, de su
 platos, de su equipo): entonces vende mas y se usa. Pero eso lo trae el, no se
 pide como requisito para generar el deck.
 
-## Paso 7. Escribir el deck
+## Paso 8. Escribir el deck
 
 `content/<alias>.py` con `OUTFILE`, `TITULO` y `build(prs)`, con el contador
 `p = [0]` / `n()`. Registra el alias en el dict `DECKS` de `build/build.py`.
@@ -200,7 +271,7 @@ Limites duros que hacen perder contenido en silencio:
 - `add_timeline`, `add_pricing` y `add_blocks_grid` devuelven una LISTA de slides.
 - `add_next_steps` admite de 3 a 5 pasos. `add_extras`, de 2 a 4.
 
-## Paso 8. Verificar
+## Paso 9. Verificar
 
 ```
 python build/build.py <alias>

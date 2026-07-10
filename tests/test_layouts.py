@@ -246,6 +246,85 @@ def test_cada_svg_generado_corresponde_a_un_bloque_del_catalogo():
     assert svgs == set(g.BLOCKS), "descuadre: %s" % sorted(svgs ^ set(g.BLOCKS))
 
 
+# --- diapositivas fijas (content/fijas.py) ---------------------------------
+
+def _fijas():
+    import content.fijas
+    return content.fijas
+
+
+def test_cada_fija_construye_su_slide():
+    # Una fija rota solo se descubriria generando un deck de cliente.
+    F = _fijas()
+    for f in F.FIJAS:
+        prs = _prs()
+        antes = len(prs.slides._sldIdLst)
+        f["fn"](prs, page=1, section="Test")
+        assert len(prs.slides._sldIdLst) == antes + 1, \
+            "la fija %s no anadio una diapositiva" % f["slug"]
+
+
+def test_el_registro_de_fijas_esta_bien_formado():
+    F = _fijas()
+    slugs = [f["slug"] for f in F.FIJAS]
+    assert len(slugs) == len(set(slugs)), "slugs de fija repetidos: %s" % slugs
+    for f in F.FIJAS:
+        for clave in ("slug", "nombre", "desc", "acto", "defecto", "fn"):
+            assert clave in f, "la fija %s no declara %s" % (f["slug"], clave)
+        assert callable(f["fn"])
+
+
+def test_los_pasos_de_serie_caben_en_el_layout():
+    # add_next_steps admite de 3 a 5: anadir un paso obliga a quitar otro.
+    F = _fijas()
+    assert 3 <= len(F.PASOS) <= 5
+    assert len(F.MISION) <= 4, "add_mission pinta 4 features como maximo"
+
+
+def test_las_fijas_se_pueden_traducir_sin_editar_el_modulo():
+    # Un deck en ingles no debe obligar a tocar content/fijas.py.
+    F = _fijas()
+    prs = _prs()
+    F.mision(prs, page=1, title="Our *mission*",
+             features=[{"icon": T.ICON["check"], "head": "One partner",
+                        "text": "Hosting, development and support."}],
+             caption=("We help SMEs go digital", "We get your business."))
+    F.proximos_pasos(prs, page=2, title="Next *steps*", subtitle="From sign-off",
+                     pasos=[("Sign-off", "You approve.", T.ICON["check"]),
+                            ("Design", "We design.", T.ICON["idea"]),
+                            ("Launch", "We publish.", T.ICON["bolt"])])
+    assert len(prs.slides._sldIdLst) == 2
+
+
+def test_el_contacto_por_defecto_encaja_en_los_dos_cierres():
+    # add_cta espera 2-tuplas y add_thanks 3-tuplas: confundirlos revienta.
+    F = _fijas()
+    assert all(len(c) == 2 for c in F.contacto_cta())
+    assert all(len(c) == 3 for c in F.contacto_thanks())
+    assert F.contacto_cta(email="x@y.z")[0][1] == "x@y.z"
+    assert F.contacto_cta()[0][1] == F.EMAIL
+
+
+def test_next_steps_no_pisa_la_descripcion_con_titulares_largos():
+    # El bug que el render delato: un titular de dos lineas caia sobre su texto.
+    largos = [("Aprobacion del presupuesto por parte del cliente", "d", None),
+              ("Aportacion de materiales y contenidos", "d", None),
+              ("Lanzamiento", "d", None)]
+    largos = [(h, t, T.ICON["check"]) for h, t, _ in largos]
+    cortos = [("Diseno", "DESCR", T.ICON["check"])] * 3
+    largos = [(h, "DESCR", g) for h, _, g in largos]
+    alturas = []
+    for pasos in (cortos, largos):
+        prs = _prs()
+        s.add_next_steps(prs, "T", pasos, page=1)
+        cajas = [sh.top for sh in prs.slides[0].shapes
+                 if sh.has_text_frame and sh.text_frame.text.strip() == "DESCR"]
+        assert len(cajas) == 3, "no encontre las 3 descripciones"
+        alturas.append(min(cajas))
+    assert alturas[1] > alturas[0], \
+        "con titulares de 2 lineas la descripcion no bajo: seguiria solapando"
+
+
 # --- el skill propuesta-a-deck --------------------------------------------
 # El skill le dice a la IA que layouts y que bloques usar. Si uno se renombra o
 # se borra, el skill sigue recomendandolo y el deck revienta al construirse.
@@ -264,11 +343,12 @@ def test_el_skill_solo_cita_layouts_que_existen():
     assert faltan == [], "el skill cita layouts inexistentes: %s" % faltan
 
 
-def test_el_skill_solo_cita_bloques_que_existen():
+def test_el_skill_solo_cita_bloques_y_fijas_que_existen():
     texto = SKILL.read_text(encoding="utf-8")
     g = _gen_blocks()
+    conocidos = set(g.BLOCKS) | {f["slug"] for f in _fijas().FIJAS}
     # El skill nombra su propio slug en el frontmatter; no es un bloque.
     citados = set(_SLUG.findall(texto)) - {"propuesta-a-deck"}
     assert citados, "el skill no cita ningun bloque"
-    faltan = sorted(slug for slug in citados if slug not in g.BLOCKS)
-    assert faltan == [], "el skill cita bloques inexistentes: %s" % faltan
+    faltan = sorted(slug for slug in citados if slug not in conocidos)
+    assert faltan == [], "el skill cita slugs inexistentes: %s" % faltan

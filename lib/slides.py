@@ -1654,14 +1654,19 @@ def add_mission(prs, title, features, image, caption_title, caption_text,
     box_h = Emu(int(T.SLIDE_H) - int(box_y))
     _rect(slide, rx, box_y, rw, box_h, fill=T.AZUL_OSCURO)
     cpad = Inches(0.5)
-    _stack_title(slide, _emph_runs(caption_title, Pt(26), color=T.BLANCO,
-                                   emph_color=T.AMARILLO),
-                 Emu(int(rx) + int(cpad)), Emu(int(box_y) + int(cpad)),
-                 Emu(int(rw) - 2 * int(cpad)), 26, line_h=1.1)
+    # `_stack_title` devuelve la Y inferior REAL, medida con la fuente. Hay que
+    # usarla: con un caption_title de dos lineas, un salto fijo lo pisa.
+    cap_bottom = _stack_title(
+        slide, _emph_runs(caption_title, Pt(26), color=T.BLANCO,
+                          emph_color=T.AMARILLO),
+        Emu(int(rx) + int(cpad)), Emu(int(box_y) + int(cpad)),
+        Emu(int(rw) - 2 * int(cpad)), 26, line_h=1.1)
     if caption_text:
-        _text(slide, Emu(int(rx) + int(cpad)),
-              Emu(int(box_y) + int(cpad) + int(Inches(0.7))),
-              Emu(int(rw) - 2 * int(cpad)), Inches(1.2),
+        cty = int(cap_bottom) + int(Inches(0.14))
+        _text(slide, Emu(int(rx) + int(cpad)), Emu(cty),
+              Emu(int(rw) - 2 * int(cpad)),
+              Emu(max(int(Inches(0.35)),
+                      int(T.SLIDE_H) - cty - int(Inches(0.35)))),
               [[(caption_text, {"size": Pt(12), "color": T.BLANCO,
                                 "font": T.FONT_BODY})]], line_spacing=1.3)
     _pagenum(slide, page)
@@ -2593,6 +2598,15 @@ def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
         rot = math.degrees(math.atan2(dx, -dy if arriba else dy))
         _arrow_head(slide, ex, ey, head, color, rot)
 
+    # El titular manda en la altura: un "Aprobacion del presupuesto" ocupa dos
+    # lineas y con una altura fija pisaria su descripcion. Se mide con la fuente
+    # real y se reserva el MAXIMO de todos, para que las descripciones queden
+    # alineadas entre columnas.
+    tw = col_w - int(Inches(0.3))
+    head_opt = {"size": Pt(14), "color": T.AZUL_OSCURO, "font": T.FONT_HEAD}
+    head_lines = max(_line_count([(st[0], head_opt)], Emu(tw)) for st in steps)
+    head_h = head_lines * int(Inches(0.3))
+
     # Todos los circulos iguales: amarillo con el icono en azul marino.
     for i, st in enumerate(steps):
         head_txt, text, glyph = (list(st) + [T.ICON["check"]])[:3]
@@ -2603,10 +2617,9 @@ def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
               color=T.AZUL_OSCURO, nudge=0.0)
 
         # Numero, titular y descripcion como un bloque compacto.
-        tw = col_w - int(Inches(0.3))
         tx = cx - tw // 2
         ny = cy + r + int(Inches(0.42))
-        num_h, head_h = int(Inches(0.5)), int(Inches(0.3))
+        num_h = int(Inches(0.5))
         _text(slide, Emu(tx), Emu(ny), Emu(tw), Emu(num_h),
               [[("%02d" % (i + 1), {"size": Pt(26), "bold": True,
                                     "color": T.AZUL_OSCURO,
@@ -2614,8 +2627,7 @@ def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
               align=PP_ALIGN.CENTER)
         hy = ny + num_h + int(Inches(0.04))
         _text(slide, Emu(tx), Emu(hy), Emu(tw), Emu(head_h),
-              [[(head_txt, {"size": Pt(14), "color": T.AZUL_OSCURO,
-                            "font": T.FONT_HEAD})]], align=PP_ALIGN.CENTER)
+              [[(head_txt, head_opt)]], align=PP_ALIGN.CENTER)
         # Titular y descripcion son una pareja: gap minimo entre ambos.
         dy = hy + head_h
         _text(slide, Emu(tx), Emu(dy), Emu(tw),

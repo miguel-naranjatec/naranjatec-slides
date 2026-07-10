@@ -27,6 +27,9 @@ layouts) y `nereidas` (deck de cliente real, ejemplo canonico). Requisitos:
 - `lib/slides.py`   - libreria de layouts (`add_*`) + helpers privados (`_*`).
 - `content/*.py`    - datos de cada deck: define `OUTFILE` (str) y `build(prs)`.
   `templates/*.py` existen pero NO estan registrados en `DECKS`.
+- `content/fijas.py` - diapositivas FIJAS (nuestras, no del cliente) y el contacto
+  por defecto. Registro `FIJAS`; se listan con `python content/fijas.py --list`.
+  No es un deck: no tiene `OUTFILE` ni va en `DECKS`.
 
 Un deck es un modulo con:
 ```python
@@ -148,7 +151,8 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
   grises que alternan arriba y abajo, con punta de flecha; debajo, numero,
   titular y descripcion. `steps`: `[(titular, texto, glyph)]`. Fuera de 3-5 ->
   `ValueError`. Los arcos son formas libres (`_arc_band`): python-pptx no tiene
-  arco grueso.
+  arco grueso. La altura del titular se MIDE (`_line_count`) y se reserva la del
+  mas largo, para que un titular de dos lineas no pise su descripcion.
 - `add_spotlight(prs, title, body, image, cta="", price=None, page, section)`
   Extra destacado: foto grande dcha + panel navy izq que la solapa, con titulo,
   parrafos y boton blanco con flecha. `body`: str o lista. `cta`: texto del boton.
@@ -246,11 +250,16 @@ resumen:
    ausente por acto) ANTES de escribir codigo.
 3. Elegir los layouts por la FORMA del contenido, no por su titulo, buscando
    variedad. No hay guion fijo: `content/nereidas.py` es un ejemplo, no la plantilla.
-4. Elegir los bloques de pagina que el documento justifica, uno a uno
+4. UNA sola ronda de preguntas, antes de generar nada: (a) que diapositivas FIJAS
+   se incluyen (checkbox; `python content/fijas.py --list`); (b) idioma, por
+   defecto el del documento; (c) tono, ofreciendo 2-3 deducidos del documento y
+   marcando por defecto "el del documento"; (d) tarifa y contacto. Las fijas se
+   importan de `content/fijas.py`, no se copian, y se traducen en la llamada.
+5. Elegir los bloques de pagina que el documento justifica, uno a uno
    (`python scripts/gen_blocks.py --list`). Nunca los 106, nunca por sector.
-5. Si el documento trae HORAS, preguntar la tarifa: nunca inventarla. Y horas y
+6. Si el documento trae HORAS, preguntar la tarifa: nunca inventarla. Y horas y
    euros no conviven en el mismo deck (se deduce la tarifa dividiendo).
-6. Los huecos: preguntar cuando el dato existe y el usuario lo tiene (un telefono);
+7. Los huecos: preguntar cuando el dato existe y el usuario lo tiene (un telefono);
    cambiar de layout cuando el dato no existe (no hay testimonio -> no `add_quote`).
    Nunca inventarlo. Todas las preguntas, en una sola ronda.
 
