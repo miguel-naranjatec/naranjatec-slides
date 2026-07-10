@@ -207,3 +207,39 @@ def test_todos_los_svg_tienen_su_png():
     assert svgs, "no hay SVG de bloques"
     assert svgs - pngs == set(), "sin rasterizar: %s" % sorted(svgs - pngs)
     assert pngs - svgs == set(), "PNG huerfanos: %s" % sorted(pngs - svgs)
+
+
+# --- catalogo de bloques (scripts/gen_blocks.py) ---------------------------
+
+def _gen_blocks():
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+    import gen_blocks
+    return gen_blocks
+
+
+def test_ningun_slug_repetido_entre_grupos():
+    # `BLOCKS` es un dict derivado de `CATALOGO`: si dos grupos declaran el mismo
+    # slug, el segundo se come al primero en silencio y perdemos un bloque sin
+    # que nadie se entere.
+    g = _gen_blocks()
+    vistos, repes = set(), []
+    for _, grupo in g.CATALOGO:
+        for slug in grupo:
+            if slug in vistos:
+                repes.append(slug)
+            vistos.add(slug)
+    assert repes == [], "slugs repetidos: %s" % sorted(repes)
+
+
+def test_todo_bloque_tiene_categoria():
+    g = _gen_blocks()
+    declarados = sum(len(grupo) for _, grupo in g.CATALOGO)
+    assert declarados == len(g.BLOCKS)
+
+
+def test_cada_svg_generado_corresponde_a_un_bloque_del_catalogo():
+    # Un SVG que sobra en disco es un bloque borrado del catalogo cuyo fichero
+    # nadie limpio: aparecera en el deck aunque ya no exista la funcion.
+    g = _gen_blocks()
+    svgs = {p.stem for p in T.BLOCKS_SRC.glob("*.svg")}
+    assert svgs == set(g.BLOCKS), "descuadre: %s" % sorted(svgs ^ set(g.BLOCKS))

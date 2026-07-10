@@ -1,7 +1,13 @@
-# Biblioteca de bloques v2: 43 esquemas nuevos
+# Biblioteca de bloques v2: 42 esquemas nuevos
 
 Fecha: 2026-07-10
-Estado: aprobado, pendiente de implementar
+Estado: implementado
+
+Nota posterior al render: se diseno con 43. `property-features` (circulo de icono
++ cifra + etiqueta, en fila de 4) cayo al verlo rasterizado junto a los demas:
+dibuja `why-us` y `kpis`. El filtro de silueta unica solo se puede aplicar de
+verdad MIRANDO los esquemas, no razonando sobre sus nombres. Quedan 42, y la
+biblioteca en 106.
 
 ## Problema
 
@@ -31,8 +37,9 @@ trabajo:
    catalogo visual con entradas que se confunden entre si es peor que un catalogo
    mas corto.
 
-Aplicando el filtro a una lista inicial de 64 candidatos, sobreviven 43. No se
-fuerza el numero: mejor 43 distinguibles que 64 con relleno.
+Aplicando el filtro a una lista inicial de 64 candidatos, sobreviven 43 -- y 42
+tras ver el render. No se fuerza el numero: mejor 42 distinguibles que 64 con
+relleno.
 
 Descartes por colision con los 64 existentes, para memoria futura:
 `filters-sidebar` es `shop-catalog`; `sticky-scroll` es `text-image`;
@@ -44,9 +51,10 @@ Descartes por colision con los 64 existentes, para memoria futura:
 `latest-news`; `specialties-grid` es `why-us`; `instructor-profile` es
 `text-image`; `roi-chart` es `stats-chart`; `mortgage-simulator` es
 `price-calculator`; `daily-menu` es `menu-carta`; `sticky-cta-bar` es
-`cookie-consent`; `empty-state` no llega a tener maquetacion.
+`cookie-consent`; `empty-state` no llega a tener maquetacion. Y ya rasterizado,
+`property-features` resulto ser `why-us` y `kpis`.
 
-## Los 43 bloques
+## Los 42 bloques
 
 Entre parentesis, la geometria que lo hace inconfundible.
 
@@ -74,10 +82,10 @@ Entre parentesis, la geometria que lo hace inconfundible.
 - `data-table` - cabecera navy + zebra + paginacion
 - `comparison-table` - checks + columna destacada
 
-### Inmobiliaria (3)
+### Inmobiliaria (2)
 - `property-map-list` - listado izq + mapa der
-- `property-features` - iconos con cifra (m2, habitaciones, banos)
-- `floor-plan` - plano de estancias
+- `floor-plan` - tres estancias, tabiques con hueco de puerta, arco de barrido y
+  cota superior. Sin el arco y los huecos, un plano es indistinguible de dos cajas.
 
 ### Restauracion (1)
 - `menu-carta` - dos columnas unidas por puntos de precio
@@ -119,7 +127,7 @@ Entre parentesis, la geometria que lo hace inconfundible.
 ### Directorio (1)
 - `directory-az` - indice A-Z + columnas de nombres
 
-Total biblioteca: 64 + 43 = **107**.
+Total biblioteca: 64 + 42 = **106**.
 
 ## Cambios en el codigo
 
@@ -187,10 +195,13 @@ test unitario. Nombres y descripciones en ASCII puro: es el deck de test.
 El test de paridad SVG/PNG cuenta dinamicamente, asi que cubre los 43 nuevos sin
 tocarlo. Se anaden dos:
 
-- `test_slugs_unicos`: ningun slug repetido entre grupos de `CATALOGO` (un dict
-  por grupo no lo impide; el `BLOCKS` derivado se comeria el duplicado en
-  silencio y perderiamos un bloque sin que nadie se entere).
+- `test_ningun_slug_repetido_entre_grupos`: un dict por grupo no impide el
+  duplicado; el `BLOCKS` derivado se comeria el segundo en silencio y
+  perderiamos un bloque sin que nadie se entere.
 - `test_todo_bloque_tiene_categoria`: `len(BLOCKS) == sum(len(g) for _, g in CATALOGO)`.
+- `test_cada_svg_generado_corresponde_a_un_bloque_del_catalogo`: un SVG que sobra
+  en disco es un bloque borrado del catalogo cuyo fichero nadie limpio. Este test
+  ya se gano el sueldo: al eliminar `property-features` senalo su SVG huerfano.
 
 ## Riesgos y como se mitigan
 

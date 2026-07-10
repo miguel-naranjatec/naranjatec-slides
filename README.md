@@ -114,7 +114,7 @@ brand/theme.py          Paleta, tipografia, iconos, medidas y helper de imagenes
 brand/assets/logo*.png  Logo de color y version blanca
 brand/assets/fonts/     Las 4 familias de marca (.ttf) + README de instalacion
 brand/assets/img/       Biblioteca de imagenes del proyecto (portable, optimizadas)
-brand/assets/blocks/    Esquemas (wireframes) de bloques de pagina: SVG + PNG derivados
+brand/assets/blocks/    Esquemas (wireframes) de 106 bloques de pagina: SVG + PNG derivados
 lib/slides.py           Libreria de maquetacion (layouts add_* + helpers)
 content/                Contenido de cada deck (datos, no logica)
   muestrario.py         Muestrario con un ejemplo de cada tipo de diapositiva (alias: test)

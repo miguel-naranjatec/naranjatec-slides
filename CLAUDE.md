@@ -140,8 +140,9 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
   Catalogo de bloques de pagina: 12 por diapositiva (4x3), cada tarjeta con el
   esquema del bloque, su nombre y una descripcion muy corta.
   `blocks`: `[(slug, nombre, descripcion)]`; `slug` es el nombre del SVG de
-  `brand/assets/blocks/`. **MULTIPAGINA**: devuelve SIEMPRE una lista y `page`
-  recibe el CONTADOR (`page=n`), como `add_pricing`.
+  `brand/assets/blocks/` (106 disponibles, agrupados por categoria en el
+  `CATALOGO` de `scripts/gen_blocks.py`). **MULTIPAGINA**: devuelve SIEMPRE una
+  lista y `page` recibe el CONTADOR (`page=n`), como `add_pricing`.
 - `add_next_steps(prs, title, steps, subtitle="", page, section)`
   Proximos pasos: 3-5 circulos amarillos (icono navy) unidos por arcos elipticos
   grises que alternan arriba y abajo, con punta de flecha; debajo, numero,
@@ -194,6 +195,12 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
   (Edge headless; no hay cairosvg ni inkscape aqui). Los SVG los ESCRIBE
   `scripts/gen_blocks.py`: no editarlos a mano. Flujo: editar `gen_blocks.py` ->
   `python scripts/gen_blocks.py` -> `python scripts/make_blocks.py`.
+- **Un bloque nuevo debe tener SILUETA PROPIA**: el esquema se lee a 2 cm, donde
+  solo comunica su geometria gruesa. Si dibuja lo mismo que otro, sobra (da igual
+  que se venda distinto). Y un bloque es una SECCION, no una pagina: un 404 o un
+  panel de usuario no entran. Ninguna de las dos reglas se puede automatizar:
+  hay que RASTERIZAR y mirar la hoja de contactos antes de darlo por bueno. La
+  lista de descartes esta en `docs/superpowers/specs/2026-07-10-bloques-v2-design.md`.
 - **Cajas de alto/ancho <= 0 corrompen el .pptx**: `python-pptx` las escribe sin
   quejarse y luego PowerPoint dice "no puede abrir el archivo" (python-pptx si lo
   abre, lo que despista). Suele venir de restar dos posiciones y que salga
