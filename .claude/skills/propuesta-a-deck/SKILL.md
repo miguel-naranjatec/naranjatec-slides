@@ -174,9 +174,14 @@ invente material.
 Todas las preguntas de los pasos 5 y 6 van **juntas, en una sola ronda**, al
 terminar el analisis. Nunca goteando.
 
-La imagen es la excepcion: no se pide nunca. Se tira de la biblioteca
-`brand/assets/img/` como PLACEHOLDER y se avisa en el docstring del deck, como
-hace `content/nereidas.py:5-7`.
+La imagen es la excepcion: **no se pide nunca**. `brand/assets/img/` es la
+biblioteca de imagenes PROPIAS de NaranjaTec (mockups de webs del estudio, fotos
+de la oficina): son material legitimo del documento, no relleno provisional. Se
+elige de ahi la que encaje y no hay nada que disculpar ni que avisar.
+
+Distinto es que el cliente aporte material suyo (fotos de sus propiedades, de sus
+platos, de su equipo): entonces vende mas y se usa. Pero eso lo trae el, no se
+pide como requisito para generar el deck.
 
 ## Paso 7. Escribir el deck
 
@@ -206,5 +211,5 @@ Y mirar las diapositivas: exportar a PNG (PowerPoint COM en Windows, LibreOffice
 headless en Linux). El build solo escribe el fichero; que el deck se lea bien no
 lo comprueba nadie mas.
 
-Al terminar, di explicitamente que imagenes son placeholder de la biblioteca y
-conviene sustituir por material real del cliente.
+Al terminar, di que imagenes de la biblioteca has elegido y por que, por si alguna
+no encaja con el cliente.

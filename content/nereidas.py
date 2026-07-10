@@ -2,9 +2,10 @@
 """Deck comercial real: propuesta de nueva web para Nereidas Real Estate.
 
 Basado en el documento de propuesta (proyecto Nereidas). Usa los layouts de
-lib/slides.py con la marca NaranjaTec. Las imagenes son de la biblioteca del
-proyecto a modo de PLACEHOLDER (mockups de web / ambientes): conviene sustituir
-por fotografia real de propiedades de Nereidas y capturas de la nueva web.
+lib/slides.py con la marca NaranjaTec. Las imagenes salen de la biblioteca propia
+del estudio (mockups de webs nuestras, ambientes, oficina): son material del
+documento, no relleno provisional. Si Nereidas aporta fotografia de sus
+propiedades, el deck gana; sin ella se sostiene igual.
 
 Genera con: python build/build.py nereidas
 
@@ -247,7 +248,7 @@ def build(prs):
 
     # 15) AMPLIACIONES OPCIONALES
     # Las dos del documento de propuesta: +2,5h y +1h, a 150 €/hora.
-    # Imagenes PLACEHOLDER: sustituir por capturas reales de la web nueva.
+    # Imagenes: mockups de webs propias del estudio, de la biblioteca.
     s.add_extras(
         prs,
         "Ampliaciones *opcionales*",

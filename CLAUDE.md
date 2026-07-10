@@ -254,8 +254,11 @@ resumen:
    cambiar de layout cuando el dato no existe (no hay testimonio -> no `add_quote`).
    Nunca inventarlo. Todas las preguntas, en una sola ronda.
 
-Imagenes: usar la biblioteca como placeholder y avisar al usuario de que conviene
-sustituirlas por fotos reales del cliente. Nunca se piden logos ni fotos.
+Imagenes: `brand/assets/img/` es la biblioteca PROPIA de NaranjaTec (mockups de
+webs del estudio, fotos de la oficina). Es material legitimo del documento, no
+relleno provisional: se elige la que encaje y no hay nada que disculpar. Nunca se
+piden logos ni fotos al usuario. Si el cliente aporta material suyo, mejor, pero
+no es requisito para generar el deck.
 
 ## Marca (resumen)
 
