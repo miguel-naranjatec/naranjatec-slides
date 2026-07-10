@@ -336,6 +336,72 @@ def test_las_fijas_se_pueden_traducir_sin_editar_el_modulo():
     assert len(prs.slides._sldIdLst) == 2
 
 
+def test_add_addons_valida_los_limites():
+    r = [{"name": "A", "desc": "d", "price": 35, "icon": T.ICON["cloud"]}] * 2
+    u = [{"name": "U", "desc": "d", "price": 750, "icon": T.ICON["lock"]}]
+    s.add_addons(_prs(), "T", r, unicos=u)                 # 2 + 1: la captura
+    s.add_addons(_prs(), "T", r + r[:1], unicos=u + u)     # 3 + 2
+    s.add_addons(_prs(), "T", r, unicos=[])                # sin pago unico
+    with pytest.raises(ValueError, match="recurrentes"):
+        s.add_addons(_prs(), "T", r[:1])
+    with pytest.raises(ValueError, match="recurrentes"):
+        s.add_addons(_prs(), "T", r + r)
+    with pytest.raises(ValueError, match="pagos unicos"):
+        s.add_addons(_prs(), "T", r, unicos=u * 3)
+
+
+def test_el_importe_anual_lo_deriva_el_layout_del_mensual():
+    # Los dos numeros no pueden divergir: 35 EUR/mes -> 420 EUR/ano, calculado.
+    prs = _prs()
+    s.add_addons(prs, "T",
+                 [{"name": "Hosting", "desc": "Alojamiento.", "price": 35,
+                   "icon": T.ICON["server"]},
+                  {"name": "Soporte", "desc": "Mantenimiento.", "price": 12.5,
+                   "icon": T.ICON["wrench"]}])
+    texto = " ".join(sh.text_frame.text for sh in prs.slides[0].shapes
+                     if sh.has_text_frame)
+    eur = s.EURO               # la constante de la libreria, no un literal
+    assert "35 %s/mes" % eur in texto and "420 %s" % eur in texto
+    assert "12,50 %s/mes" % eur in texto and "150 %s" % eur in texto
+    assert "419" not in texto, "el anual salio de un float, no de centimos"
+
+
+def test_con_tres_recurrentes_nada_se_sale_de_su_tarjeta():
+    # Con 3 servicios la tarjeta baja de 1,25" y la descripcion se pintaba por
+    # debajo del borde blanco. Las tarjetas terminan en 6,35"; nada las rebasa.
+    from pptx.util import Inches as In
+    prs = _prs()
+    s.add_addons(prs, "T", [
+        {"name": "Hosting - WordPress optimizado",
+         "desc": "Alojamiento gestionado y optimizado para WordPress.",
+         "price": 35, "icon": T.ICON["server"]},
+        {"name": "Soporte y mantenimiento",
+         "desc": "Actualizaciones, copias de seguridad y soporte continuo.",
+         "price": 35, "icon": T.ICON["wrench"]},
+        {"name": "CDN", "desc": "Red de entrega global de contenidos.",
+         "price": 10, "icon": T.ICON["globe"]},
+    ], note="Sin IVA.")
+    limite = int(In(6.35))
+    for sh in prs.slides[0].shapes:
+        if sh.has_text_frame and "Facturaci" in sh.text_frame.text:
+            assert sh.top + sh.height <= limite, \
+                "la descripcion se sale de la tarjeta: %.2f in" % \
+                ((sh.top + sh.height) / 914400)
+
+
+def test_la_fija_de_complementos_construye_y_es_adaptable():
+    F = _fijas()
+    prs = _prs()
+    F.complementos(prs, page=1, section="Inversion")
+    F.complementos(prs, page=2, unicos=[])                 # solo recurrentes
+    F.complementos(prs, page=3, recurrentes=F.RECURRENTES + [
+        {"name": "CDN", "desc": "Red de entrega.", "price": 10,
+         "icon": T.ICON["globe"]}])
+    assert len(prs.slides._sldIdLst) == 3
+    assert F.LLAVE_EN_MANO["price"] == 750
+    assert all(r["price"] == 35 for r in F.RECURRENTES)
+
+
 def test_el_contacto_por_defecto_encaja_en_los_dos_cierres():
     # add_cta espera 2-tuplas y add_thanks 3-tuplas: confundirlos revienta.
     F = _fijas()

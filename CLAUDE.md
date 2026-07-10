@@ -158,6 +158,13 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
   `ValueError`. Los arcos son formas libres (`_arc_band`): python-pptx no tiene
   arco grueso. La altura del titular se MIDE (`_line_count`) y se reserva la del
   mas largo, para que un titular de dos lineas no pise su descripcion.
+- `add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="", page, section)`
+  Complementos al presupuesto: pagos unicos izq (tarjeta alta con 1; dos filas con
+  2) y servicios recurrentes dcha (2 o 3; fuera de rango -> `ValueError`).
+  `recurrentes`/`unicos`: `{"name","desc","price","icon"}`. `price` es NUMERICO y
+  MENSUAL en los recurrentes: el equivalente anual lo calcula el layout (x12, en
+  centimos) y lo pega a la descripcion, para que los dos numeros nunca se
+  contradigan. `unicos=[]` da todo el ancho a los recurrentes.
 - `add_spotlight(prs, title, body, image, cta="", price=None, page, section)`
   Extra destacado: foto grande dcha + panel navy izq que la solapa, con titulo,
   parrafos y boton blanco con flecha. `body`: str o lista. `cta`: texto del boton.

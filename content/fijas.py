@@ -117,6 +117,49 @@ def mision(prs, page=None, section="", features=None, image=None,
                          cap[0], cap[1], page=page, section=section)
 
 
+# --- Complementos: hosting, soporte y llave en mano ------------------------
+# Van en casi todas las propuestas. Los importes son los de casa; se sobreescriben
+# pasando otras listas. El equivalente anual NO se escribe aqui: lo calcula
+# `add_addons` multiplicando por 12, para que no pueda contradecir al mensual.
+
+LLAVE_EN_MANO = {
+    "name": "Llave en mano",
+    "desc": "Entrega de la web lista para publicar: contenidos, configuración y "
+            "puesta en marcha por NaranjaTec.",
+    "price": 750,
+    "icon": T.ICON["lock"],
+}
+
+RECURRENTES = [
+    {"name": "Hosting · WordPress optimizado",
+     "desc": "Alojamiento gestionado y optimizado para WordPress.",
+     "price": 35, "icon": T.ICON["server"]},
+    {"name": "Soporte y mantenimiento",
+     "desc": "Actualizaciones, copias de seguridad y soporte continuo del sitio.",
+     "price": 35, "icon": T.ICON["wrench"]},
+]
+
+NOTA_COMPLEMENTOS = ("Opciones no incluidas en el total del presupuesto. "
+                     "Todos los precios son sin IVA.")
+
+
+def complementos(prs, page=None, section="", recurrentes=None, unicos=None,
+                 title="Complementos a tu *medida*",
+                 subtitle="Opciones y servicios", note=None):
+    """Pagos unicos (llave en mano) a la izquierda y servicios recurrentes
+    (hosting, soporte) a la derecha. `unicos=[]` quita la columna izquierda."""
+    return s.add_addons(
+        prs, title,
+        recurrentes if recurrentes is not None else RECURRENTES,
+        unicos=unicos if unicos is not None else [LLAVE_EN_MANO],
+        subtitle=subtitle,
+        note=note if note is not None else NOTA_COMPLEMENTOS,
+        label_unico="Pago único",
+        label_recurrente="Servicios recurrentes · Pago anual",
+        anual_texto="Facturación anual (%s/año).",
+        page=page, section=section)
+
+
 # --- Contacto --------------------------------------------------------------
 # El cierre de un deck necesita a quien escribir. Se PREGUNTA a que contacto va
 # dirigido; si no se dice nada, estos son los de casa. Nunca se inventa uno.
@@ -165,6 +208,14 @@ FIJAS = [
         "acto": "propuesta",
         "defecto": True,
         "fn": testimonio,
+    },
+    {
+        "slug": "complementos",
+        "nombre": "Complementos (hosting, soporte, llave en mano)",
+        "desc": "Pago unico y servicios recurrentes, fuera del presupuesto.",
+        "acto": "presupuesto",
+        "defecto": True,
+        "fn": complementos,
     },
     {
         "slug": "proximos-pasos",

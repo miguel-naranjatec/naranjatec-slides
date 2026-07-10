@@ -111,9 +111,12 @@ nosotros siempre igual. Lo segundo vive en `content/fijas.py`:
 python content/fijas.py --list
 ```
 
-Hoy hay tres (`mision`, `testimonio`, `proximos-pasos`), y el registro crece.
-Pregunta cuales incluir con **multiSelect, marcando las de `defecto`**. No las des
-por incluidas ni por excluidas.
+Hoy hay cuatro (`mision`, `testimonio`, `complementos`, `proximos-pasos`), y el
+registro crece. Pregunta cuales incluir con **multiSelect, marcando las de
+`defecto`**. No las des por incluidas ni por excluidas.
+
+`complementos` es la de hosting, soporte y llave en mano: va en casi todas las
+propuestas, en el acto del presupuesto, y deja claro que NO entran en el total.
 
 Cada fija declara el `acto` del arco donde encaja. Se insertan ahi, no donde
 caigan. Se importan, no se copian:

@@ -2786,3 +2786,202 @@ def add_blocks_grid(prs, title, blocks, subtitle="", page=None, section=""):
             prs, title, chunk, subtitle, section,
             page() if page is not None else None))
     return slides
+
+
+def _addon_pill(slide, x, y, w, h, texto):
+    """Pastilla dorada con el importe. La usan las dos columnas."""
+    pill = _rect(slide, Emu(x), Emu(y), Emu(w), Emu(h), fill=T.AMARILLO,
+                 shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.5)
+    _soft_shadow(pill, alpha=13000, blur=50000, dist=14000)
+    _text(slide, Emu(x), Emu(y), Emu(w), Emu(h),
+          [[(texto, {"size": Pt(15), "bold": True, "color": T.AZUL_OSCURO,
+                     "font": T.FONT_HEAD})]],
+          align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+    return pill
+
+
+def _addon_fila(slide, x, y, w, h, item, pill_txt):
+    """Tarjeta horizontal: circulo de icono, nombre, pastilla, y descripcion."""
+    card = _rect(slide, Emu(x), Emu(y), Emu(w), Emu(h), fill=T.BLANCO,
+                 shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.05)
+    _soft_shadow(card, alpha=12000)
+
+    # Con tres servicios la tarjeta baja de 1,25" y todo tiene que apretarse: si
+    # no, la descripcion se pinta por debajo del borde blanco.
+    compacta = h < int(Inches(1.25))
+    pad = int(Inches(0.20 if compacta else 0.28))
+    dia = int(Inches(0.54 if compacta else 0.62))
+    # La pastilla encoge con la tarjeta. Fija a 1.6" dejaba al nombre 0,9" de
+    # ancho en la columna estrecha, y PowerPoint parte la palabra: "Importa cion".
+    pw = min(int(Inches(1.6)), max(int(Inches(1.15)), int(w * 0.28)))
+    ph = int(Inches(0.44 if compacta else 0.5))
+    d_pt = 9.0 if compacta else 9.5
+
+    _rect(slide, Emu(x + pad), Emu(y + pad), Emu(dia), Emu(dia), fill=T.AZUL,
+          shape=MSO_SHAPE.OVAL)
+    _icon(slide, Emu(x + pad), Emu(y + pad), Emu(dia),
+          item.get("icon", T.ICON["cloud"]), color=T.BLANCO, nudge=0.0)
+
+    nx = x + pad + dia + int(Inches(0.24))
+    nw = (x + w - pad - pw - int(Inches(0.2))) - nx
+    n_opt = {"size": Pt(15), "color": T.AZUL_OSCURO, "font": T.FONT_HEAD}
+    n_lin = _line_count([(item["name"], n_opt)], Emu(nw), tol=TOL_ESTRICTA)
+    n_h = int(round(n_lin * 1.22 * 15 * 12700))
+    _text(slide, Emu(nx), Emu(y + pad), Emu(nw), Emu(n_h),
+          [[(item["name"], n_opt)]])
+
+    desc = item.get("desc", "")
+    d_opt = {"size": Pt(d_pt), "color": T.GRIS_SUAVE, "font": T.FONT_BODY}
+    if desc:
+        g_nd = int(Inches(0.06 if compacta else 0.14))
+        if compacta:
+            # Debajo del icono no cabe: la altura del circulo se desperdicia. La
+            # descripcion va en la columna del nombre, a su misma sangria.
+            dx, dw, dy = nx, nw, y + pad + n_h + g_nd
+        else:
+            dx, dw, dy = x + pad, w - 2 * pad, y + pad + max(n_h, dia) + g_nd
+        d_h = int(round(_line_count([(desc, d_opt)], Emu(dw), tol=TOL_ESTRICTA)
+                        * 1.32 * d_pt * 12700))
+        d_h = min(d_h, max(int(Inches(0.22)), y + h - pad - dy))
+        _text(slide, Emu(dx), Emu(dy), Emu(dw), Emu(d_h), [[(desc, d_opt)]],
+              line_spacing=1.32)
+
+    # La pastilla se centra con el nombre; en compacta, con toda la tarjeta.
+    py = (y + (h - ph) // 2) if compacta else (y + pad + (n_h - ph) // 2)
+    _addon_pill(slide, x + w - pad - pw, py, pw, ph, pill_txt)
+
+
+def _addon_hero(slide, x, y, w, h, item, pill_txt):
+    """Tarjeta alta del pago unico: circulo dorado, nombre, descripcion y la
+    pastilla del importe. Todo es un bloque MEDIDO y centrado en la tarjeta: con
+    alturas fijas, la pastilla acababa encima del nombre."""
+    card = _rect(slide, Emu(x), Emu(y), Emu(w), Emu(h), fill=T.BLANCO,
+                 shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.05)
+    _soft_shadow(card, alpha=12000)
+
+    pad = int(Inches(0.34))
+    tw = w - 2 * pad
+    pw, ph = int(Inches(2.1)), int(Inches(0.62))
+    g_cn, g_nd, g_dp = (int(Inches(0.30)), int(Inches(0.12)),
+                        int(Inches(0.30)))
+
+    n_opt = {"size": Pt(20), "color": T.AZUL_OSCURO, "font": T.FONT_HEAD}
+    n_h = int(round(_line_count([(item["name"], n_opt)], Emu(tw),
+                                tol=TOL_ESTRICTA) * 1.22 * 20 * 12700))
+    desc = item.get("desc", "")
+    d_opt = {"size": Pt(10.5), "color": T.GRIS_SUAVE, "font": T.FONT_BODY}
+    d_h = int(round(_line_count([(desc, d_opt)], Emu(tw), tol=TOL_ESTRICTA)
+                    * 1.4 * 10.5 * 12700)) if desc else 0
+
+    # El circulo cede espacio si el texto lo necesita; nunca al reves.
+    fijo = n_h + g_cn + (g_nd + d_h if desc else 0) + g_dp + ph + 2 * pad
+    dia = max(int(Inches(0.9)), min(int(Inches(1.5)), h - fijo))
+
+    bloque = dia + g_cn + n_h + (g_nd + d_h if desc else 0) + g_dp + ph
+    cy = y + max(pad, (h - bloque) // 2)
+
+    _rect(slide, Emu(x + (w - dia) // 2), Emu(cy), Emu(dia), Emu(dia),
+          fill=T.AMARILLO, shape=MSO_SHAPE.OVAL)
+    _icon(slide, Emu(x + (w - dia) // 2), Emu(cy), Emu(dia),
+          item.get("icon", T.ICON["check"]), color=T.AZUL_OSCURO, nudge=0.0)
+
+    ny = cy + dia + g_cn
+    _text(slide, Emu(x + pad), Emu(ny), Emu(tw), Emu(n_h), [[(item["name"], n_opt)]],
+          align=PP_ALIGN.CENTER)
+    py = ny + n_h + g_dp
+    if desc:
+        _text(slide, Emu(x + pad), Emu(ny + n_h + g_nd), Emu(tw), Emu(d_h),
+              [[(desc, d_opt)]], align=PP_ALIGN.CENTER, line_spacing=1.4)
+        py = ny + n_h + g_nd + d_h + g_dp
+    _addon_pill(slide, x + (w - pw) // 2, py, pw, ph, pill_txt)
+
+
+def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
+               label_unico="Pago unico",
+               label_recurrente="Servicios recurrentes - Pago anual",
+               anual_texto="Facturacion anual (%s/ano).",
+               page=None, section=""):
+    """Complementos al presupuesto: pagos unicos a la izquierda y servicios
+    recurrentes (EUR/mes) a la derecha, con la nota al pie.
+
+    recurrentes: [{"name","desc","price","icon"}], de 2 a 3. `price` es el importe
+    MENSUAL, numerico. El equivalente anual NO se escribe: lo calcula el layout
+    (`price * 12`) y lo pega al final de la descripcion, para que los dos numeros
+    no puedan contradecirse. `anual_texto=None` lo desactiva.
+
+    unicos: los mismos campos, de 0 a 2, con `price` como importe total. Con uno
+    se pinta una tarjeta alta y destacada; con dos, dos filas. Sin ninguno, los
+    recurrentes ocupan todo el ancho.
+    """
+    if not 2 <= len(recurrentes) <= 3:
+        raise ValueError(
+            "add_addons: %d servicios recurrentes; admite 2 o 3."
+            % len(recurrentes))
+    if len(unicos) > 2:
+        raise ValueError(
+            "add_addons: %d pagos unicos; admite 0, 1 o 2." % len(unicos))
+
+    slide = _slide(prs)
+    _topbar(slide, section)
+    tb = _title(slide, title, y=Inches(1.05))
+    top = max(int(Inches(2.0)), int(tb) + int(Inches(0.28)))
+    if subtitle:
+        _text(slide, MARGIN, Emu(int(tb) + int(Inches(0.06))), Inches(9.0),
+              Inches(0.4),
+              [[(subtitle, {"size": Pt(13), "italic": True,
+                            "color": T.GRIS_SUAVE,
+                            "font": T.FONT_TITLE_EMPH})]])
+        top += int(Inches(0.34))
+
+    bottom = int(Inches(6.35))
+    lbl_h = int(Inches(0.3))
+    cards_y = top + lbl_h + int(Inches(0.16))
+    gap = int(Inches(0.34))
+
+    def _etiqueta(x, w, txt):
+        _text(slide, Emu(x), Emu(top), Emu(w), Emu(lbl_h),
+              [[(txt.upper(), {"size": Pt(10), "bold": True, "color": T.AZUL,
+                               "font": T.FONT_MONO, "spacing": 140})]])
+
+    if unicos:
+        # Dos pagos unicos van en fila, y una fila necesita mas ancho que la
+        # tarjeta alta: icono, nombre y pastilla comparten linea.
+        uw = int(Inches(4.1 if len(unicos) == 1 else 4.9))
+        rx = int(MARGIN) + uw + int(Inches(0.45))
+        rw = int(T.SLIDE_W) - int(MARGIN) - rx
+        _etiqueta(int(MARGIN), uw, label_unico)
+        zona = bottom - cards_y
+        if len(unicos) == 1:
+            _addon_hero(slide, int(MARGIN), cards_y, uw, zona, unicos[0],
+                        _fmt_eur(unicos[0]["price"]))
+        else:
+            ch = (zona - gap) // 2
+            for i, it in enumerate(unicos):
+                _addon_fila(slide, int(MARGIN), cards_y + i * (ch + gap), uw, ch,
+                            it, _fmt_eur(it["price"]))
+    else:
+        rx, rw = int(MARGIN), int(CONTENT_W)
+
+    _etiqueta(rx, rw, label_recurrente)
+    n = len(recurrentes)
+    zona = bottom - cards_y
+    r_gap = int(Inches(0.24)) if n == 3 else gap
+    ch = (zona - r_gap * (n - 1)) // n
+    for i, it in enumerate(recurrentes):
+        item = dict(it)
+        if anual_texto:
+            # En centimos, no en float: 35 EUR/mes x 12 son 420 EUR exactos, y no
+            # 419,99 por un redondeo. El anual se DERIVA del mensual y por eso no
+            # puede contradecirlo.
+            anual = anual_texto % _fmt_eur_centimos(_centimos(it["price"]) * 12)
+            item["desc"] = (item.get("desc", "").rstrip() + " " + anual).strip()
+        _addon_fila(slide, rx, cards_y + i * (ch + r_gap), rw, ch, item,
+                    "%s/mes" % _fmt_eur(it["price"]))
+
+    if note:
+        _text(slide, MARGIN, Emu(bottom + int(Inches(0.28))), CONTENT_W,
+              Inches(0.5),
+              [[(note, {"size": Pt(10), "italic": True, "color": T.GRIS_SUAVE,
+                        "font": T.FONT_TITLE_EMPH})]], align=PP_ALIGN.CENTER)
+    _pagenum(slide, page)
+    return slide
