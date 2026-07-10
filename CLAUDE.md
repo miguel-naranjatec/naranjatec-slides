@@ -30,6 +30,9 @@ layouts) y `nereidas` (deck de cliente real, ejemplo canonico). Requisitos:
 - `content/fijas.py` - diapositivas FIJAS (nuestras, no del cliente) y el contacto
   por defecto. Registro `FIJAS`; se listan con `python content/fijas.py --list`.
   No es un deck: no tiene `OUTFILE` ni va en `DECKS`.
+- `content/testimonios.py` - los 8 testimonios reales, etiquetados por `temas`.
+  `por_tema("hosting")` devuelve quien lo defiende mejor. Las citas son LITERALES;
+  el `extracto` de las largas es un subconjunto literal (hay un test).
 
 Un deck es un modulo con:
 ```python

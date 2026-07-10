@@ -1088,19 +1088,33 @@ def add_quote(prs, quote, author, role="", avatar=None, stars=5, image=None,
         for i in range(nst):
             _rect(slide, Emu(sx + i * (ssz + sgap)), Emu(sy), Emu(ssz),
                   Emu(ssz), fill=T.AMARILLO, shape=MSO_SHAPE.STAR_5_POINT)
-    # Cita en serif italica, centrada, en blanco.
-    _text(slide, inx, Emu(cyt + int(Inches(1.25))), inw, Inches(1.5),
-          [[('"' + quote + '"', {"size": Pt(23), "italic": True,
-                                 "color": T.BLANCO,
-                                 "font": T.FONT_TITLE_EMPH})]],
+    # Cita en serif italica, centrada, en blanco. La longitud manda: se MIDE con
+    # la fuente real y se coge el cuerpo mas grande que quepa. Con un tamano y
+    # una altura fijos, una cita larga desborda la tarjeta y se come al autor
+    # (PowerPoint no recorta el texto sobrante: lo pinta encima).
+    q_txt = '"' + quote + '"'
+    av = int(Inches(0.82)) if avatar else 0
+    gap_av = int(Inches(0.16)) if avatar else 0
+    autor_h = av + gap_av + int(Inches(0.72))     # nombre + cargo
+    zona_y0 = cyt + int(Inches(1.12))
+    zona_y1 = cyt + int(chh) - int(Inches(0.30))
+    gap = int(Inches(0.22))
+    for size in (23, 21, 19, 17, 15):
+        q_opt = {"size": Pt(size), "italic": True, "color": T.BLANCO,
+                 "font": T.FONT_TITLE_EMPH}
+        q_h = int(round(_line_count([(q_txt, q_opt)], inw) * 1.3 * size * 12700))
+        if q_h + gap + autor_h <= zona_y1 - zona_y0:
+            break
+    # Cita y autor son un bloque: se centra en la tarjeta, bajo las estrellas.
+    q_y = zona_y0 + max(0, ((zona_y1 - zona_y0) - (q_h + gap + autor_h)) // 2)
+    _text(slide, inx, Emu(q_y), inw, Emu(q_h), [[(q_txt, q_opt)]],
           align=PP_ALIGN.CENTER, line_h=1.3)
     # Autor: avatar centrado + nombre + cargo.
-    av = int(Inches(0.82))
-    ay = cyt + int(Inches(2.7))
+    ay = q_y + q_h + gap
     if avatar:
         _img(slide, avatar, Emu((int(T.SLIDE_W) - av) // 2), Emu(ay), Emu(av),
              Emu(av), radius=0.5)
-    ty = ay + av + int(Inches(0.16))
+    ty = ay + av + gap_av
     _text(slide, inx, Emu(ty), inw, Inches(0.4),
           [[(author, {"size": Pt(15), "bold": True, "color": T.BLANCO,
                       "font": T.FONT_HEAD})]], align=PP_ALIGN.CENTER)

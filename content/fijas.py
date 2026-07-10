@@ -28,7 +28,26 @@ if __name__ == "__main__":                      # ejecutable suelto: python cont
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import brand.theme as T
+import content.testimonios as TT
 import lib.slides as s
+
+
+# --- Testimonio ------------------------------------------------------------
+# La fija elige la voz que sostiene el argumento del deck. Sin pistas, habla
+# Importaco: profesionalidad, plazos, incidencias y confianza sirven en casi
+# cualquier propuesta.
+
+TESTIMONIO_DEFECTO = "importaco"
+
+
+def testimonio(prs, page=None, section="", slug=None, temas=(), corto=True):
+    """Un testimonio real de `content/testimonios.py`. Pasa `temas` (los del
+    argumento del deck: "hosting", "plazos", "autonomia"...) y elige el cliente
+    que mejor los defiende; o fuerza uno con `slug`."""
+    if slug is None:
+        candidatos = TT.por_tema(*temas) if temas else []
+        slug = candidatos[0] if candidatos else TESTIMONIO_DEFECTO
+    return TT.quote(prs, slug, page=page, section=section, corto=corto)
 
 
 # --- Proximos pasos --------------------------------------------------------
@@ -138,6 +157,14 @@ FIJAS = [
         "acto": "solucion",
         "defecto": True,
         "fn": mision,
+    },
+    {
+        "slug": "testimonio",
+        "nombre": "Testimonio de cliente",
+        "desc": "Una voz real que sostiene el argumento (elige por temas).",
+        "acto": "propuesta",
+        "defecto": True,
+        "fn": testimonio,
     },
     {
         "slug": "proximos-pasos",

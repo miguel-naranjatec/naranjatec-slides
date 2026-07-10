@@ -111,24 +111,30 @@ nosotros siempre igual. Lo segundo vive en `content/fijas.py`:
 python content/fijas.py --list
 ```
 
-Hoy hay dos (`mision`, `proximos-pasos`), y el registro crece. Pregunta cuales
-incluir con **multiSelect, marcando las de `defecto`**. No las des por incluidas
-ni por excluidas.
+Hoy hay tres (`mision`, `testimonio`, `proximos-pasos`), y el registro crece.
+Pregunta cuales incluir con **multiSelect, marcando las de `defecto`**. No las des
+por incluidas ni por excluidas.
 
-Cada fija declara el `acto` del arco donde encaja: `mision` en la solucion,
-`proximos-pasos` al final. Se insertan ahi, no donde caigan. Se importan, no se
-copian:
+Cada fija declara el `acto` del arco donde encaja. Se insertan ahi, no donde
+caigan. Se importan, no se copian:
 
 ```python
 import content.fijas as F
 F.mision(prs, page=n(), section="La solucion")
+F.testimonio(prs, page=n(), section="Confianza", temas=("hosting", "soporte"))
 F.proximos_pasos(prs, page=n(), section="Siguiente")
 ```
 
-Ambas admiten adaptacion sin dejar de ser fijas: los titulares de `PASOS` no se
+Las tres admiten adaptacion sin dejar de ser fijas. Los titulares de `PASOS` no se
 tocan, pero su descripcion si, y cabe sustituir una fase por otra (una migracion,
 una formacion) mientras no se pasen de 5. En `mision`, los `features` se reordenan
 o cambian segun lo que se ofrezca.
+
+**El testimonio se elige, no se sortea.** Pasa a `F.testimonio` los `temas` del
+argumento del deck y hablara el cliente que mejor los defiende: en una propuesta
+de hosting critico, Pig&Hen; si el cliente teme depender del proveedor, Canon; si
+lo que pesa son los plazos, Importaco. `python content/testimonios.py --list`
+muestra los ocho y sus temas.
 
 Si el usuario pide una fija que no existe todavia, no la improvises dentro del
 deck: se anade como entrada nueva a `FIJAS`, y asi la tienen todos los decks.
@@ -237,10 +243,12 @@ deck. Si el usuario no lo dice, hay valores de casa en `content/fijas.py`
 
 | Falta | En vez de | Usa |
 |---|---|---|
-| Testimonio con autor | `add_quote` | `add_statement` |
 | Hitos con fecha | `add_timeline` | `add_process` |
 | Precios | `add_pricing` | omitir la slide |
 | Cifras duras | `add_stats` | `add_bullets`, `add_service_grid` |
+
+El testimonio nunca falta: hay ocho reales en `content/testimonios.py`, con nombre
+y cargo. Jamas se inventa una cita ni se atribuye a un cliente algo que no dijo.
 
 Estas preguntas van en la **ronda unica del paso 4**, junto a las fijas, el idioma
 y el tono. Nunca goteando.

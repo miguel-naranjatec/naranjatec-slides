@@ -325,6 +325,78 @@ def test_next_steps_no_pisa_la_descripcion_con_titulares_largos():
         "con titulares de 2 lineas la descripcion no bajo: seguiria solapando"
 
 
+# --- testimonios (content/testimonios.py) ----------------------------------
+
+def _testimonios():
+    import content.testimonios
+    return content.testimonios
+
+
+def test_cada_testimonio_construye_su_slide():
+    TT = _testimonios()
+    for t in TT.TESTIMONIOS:
+        prs = _prs()
+        TT.quote(prs, t["slug"], page=1, section="Test")
+        assert len(prs.slides._sldIdLst) == 1, t["slug"]
+
+
+def test_el_extracto_es_literal():
+    # La regla que no se puede romper: un extracto solo QUITA texto, nunca lo
+    # reescribe. Si alguien "mejora" la frase de un cliente, esto lo caza.
+    TT = _testimonios()
+    def limpia(s):
+        return " ".join(s.split()).strip(" .,;:!?").lower()
+
+    for t in TT.TESTIMONIOS:
+        if not t["extracto"]:
+            continue
+        for trozo in t["extracto"].split("[...]"):
+            trozo = limpia(trozo)
+            if not trozo:
+                continue
+            assert trozo in limpia(t["texto"]), \
+                "%s: '%s' no aparece literal en la cita" % (t["slug"], trozo[:60])
+
+
+def test_add_quote_encoge_la_cita_larga_en_vez_de_pisar_al_autor():
+    # La cita integra de Importaco (74 palabras) desbordaba la tarjeta y caia
+    # sobre el nombre. El cuerpo se elige midiendo, no a ojo.
+    TT = _testimonios()
+    largo = TT.texto("importaco", corto=False)
+    corto = TT.texto("bendorfy")
+
+    def cuerpo_cita(texto):
+        prs = _prs()
+        s.add_quote(prs, texto, author="A", role="R", page=1)
+        for sh in prs.slides[0].shapes:
+            if sh.has_text_frame and texto[:24] in sh.text_frame.text:
+                return sh.text_frame.paragraphs[0].runs[0].font.size.pt
+        raise AssertionError("no encontre la cita")
+
+    assert cuerpo_cita(corto) == 23, "una cita corta debe ir al cuerpo mayor"
+    assert cuerpo_cita(largo) < 23, "una cita de 74 palabras debe encoger"
+
+
+def test_por_tema_ordena_por_afinidad():
+    TT = _testimonios()
+    assert TT.por_tema("hosting") == ["pig-hen", "selva-digital"]
+    # El que comparte dos temas va antes que el que comparte uno.
+    ranking = TT.por_tema("plazos", "incidencias")
+    assert ranking[0] == "importaco"
+    assert "valencia-guias" in ranking
+    assert TT.por_tema("tema-que-no-existe") == []
+
+
+def test_el_extracto_solo_existe_si_la_cita_es_larga():
+    # Un extracto de una cita que ya cabe es trabajo tirado y una fuente de
+    # divergencia entre las dos versiones.
+    TT = _testimonios()
+    for t in TT.TESTIMONIOS:
+        if t["extracto"]:
+            assert len(t["texto"].split()) >= 40, \
+                "%s: no necesita extracto" % t["slug"]
+
+
 # --- el skill propuesta-a-deck --------------------------------------------
 # El skill le dice a la IA que layouts y que bloques usar. Si uno se renombra o
 # se borra, el skill sigue recomendandolo y el deck revienta al construirse.
