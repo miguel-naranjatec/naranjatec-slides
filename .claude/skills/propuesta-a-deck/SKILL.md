@@ -274,6 +274,11 @@ Limites duros que hacen perder contenido en silencio:
 
 - `add_bullets` pinta 4 como maximo: trunca sin avisar.
 - `add_process` es 2x2 (4). `add_service_grid` llega a 9.
+- La ETIQUETA del `stat` de `add_image_feature` son DOS O TRES PALABRAS
+  ("mercados listos"), no una frase. Es una pastilla estrecha junto a la cifra.
+- En las tarjetas (`add_solution`, `add_index`, `add_service_grid`) los textos de
+  cada item deben ocupar lo mismo: si uno se va a tres lineas y los demas tienen
+  dos, la rejilla se descompensa. Recorta ese, no alargues los otros.
 - `add_pricing` acepta 10 partidas (mas -> `ValueError`) y recibe el CONTADOR
   (`page=n`), no su valor. Igual `add_blocks_grid`.
 - `add_timeline`, `add_pricing` y `add_blocks_grid` devuelven una LISTA de slides.

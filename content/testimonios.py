@@ -68,7 +68,9 @@ TESTIMONIOS = [
                  "mantener actualizada de forma independiente. Estamos muy "
                  "satisfechos sobre precio/calidad, diseño y el proceso. "
                  "¡Empresa 100% recomendable!",
-        "extracto": None,
+        "extracto": "Buscábamos una web ágil de gestionar que luego podíamos "
+                    "mantener actualizada de forma independiente. [...] "
+                    "¡Empresa 100% recomendable!",
     },
     {
         "slug": "abordo",

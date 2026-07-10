@@ -83,14 +83,24 @@ def _pil_font(name, bold):
     return font
 
 
-def _line_count(runs, box_w):
+# Tolerancia estricta para MEDIR antes de reservar sitio: se cuenta una linea de
+# mas antes que quedarse corto. Quedarse corto no recorta el texto, lo superpone.
+TOL_ESTRICTA = 0.97
+
+
+def _line_count(runs, box_w, tol=1.04):
     """Estima en cuantas lineas se envuelve un parrafo (lista de (txt, opt)) en
     una caja de ancho `box_w` (EMU), midiendo palabra a palabra con la fuente
     real de cada run. Todo en PUNTOS: getlength() mide a _MEASURE_PX px y se
-    escala a size_pt. Ajuste voraz, como PowerPoint. Minimo 1."""
-    # Tolerancia del 4%: PowerPoint suele ajustar algo mas que la medida cruda
-    # (variante optica de la fuente, kerning); evita contar de mas una linea.
-    box_pt = int(box_w) / 12700.0 * 1.04
+    escala a size_pt. Ajuste voraz, como PowerPoint. Minimo 1.
+
+    `tol` es cuanto se fia uno de la medida. El 1.04 por defecto es OPTIMISTA
+    (deja entrar un 4% mas de texto por linea) y sirve para no contar una linea
+    de mas al colocar un titulo. Pero quien RESERVA espacio para un bloque que
+    lleva algo debajo debe pasar `tol=TOL_ESTRICTA`: si se queda corto, el texto
+    sobrante no se recorta, se pinta encima de lo siguiente.
+    """
+    box_pt = int(box_w) / 12700.0 * tol
     lines, cur = 1, 0.0
     for txt, opt in runs:
         size_pt = int(opt.get("size", T.SIZE_BODY)) / 12700.0
@@ -369,7 +379,9 @@ def _icon_chip(slide, x, y, size, glyph, bg=None, fg=T.AMARILLO):
     else:
         _grad_fill(sp, T.AZUL_CHIP, bg)
     _soft_shadow(sp, alpha=30000, blur=45000, dist=22000)
-    _icon(slide, x, y, size, glyph, color=fg)
+    # Dentro del chip manda el centro geometrico, como en un circulo: el nudge
+    # optico de _icon lo subia un 4% y el icono quedaba descentrado hacia arriba.
+    _icon(slide, x, y, size, glyph, color=fg, nudge=0.0)
 
 
 def _pill(slide, x, y, w, h, text, fill=None, text_color=T.AZUL,
@@ -686,6 +698,30 @@ def add_index(prs, title, items, page=None, highlight=2):
     chip = Inches(0.9)
     defaults = [T.ICON["people"], T.ICON["bolt"], T.ICON["cloud"],
                 T.ICON["phone"], T.ICON["gear"], T.ICON["check"]]
+
+    # Titulo y descripcion forman un bloque. Se mide el mas alto de las cuatro
+    # tarjetas y TODAS usan esa altura: asi los titulos quedan a la misma linea
+    # aunque una descripcion ocupe dos lineas y otra una. El bloque se centra en
+    # el hueco que queda bajo el chip, en vez de anclarse a una altura fija.
+    tw = Emu(int(card_w) - 2 * int(pad))
+    gap_td = int(Inches(0.09))
+
+    def _medir(it):
+        t = it[0] if isinstance(it, (list, tuple)) else it
+        d = it[1] if isinstance(it, (list, tuple)) and len(it) > 1 else ""
+        th = int(round(_line_count([(t, {"size": Pt(16), "font": T.FONT_HEAD})],
+                                   tw, tol=TOL_ESTRICTA) * 1.25 * 16 * 12700))
+        dh = int(round(_line_count([(d, {"size": Pt(11), "font": T.FONT_BODY})],
+                                   tw, tol=TOL_ESTRICTA) * 1.35 * 11 * 12700)) \
+            if d else 0
+        return th, dh, th + (gap_td + dh if d else 0)
+
+    medidas = [_medir(it) for it in items]
+    bloque_h = max(m[2] for m in medidas)
+    zona_y0 = int(y) + int(pad) + int(chip) + int(Inches(0.30))
+    zona_y1 = int(y) + int(card_h) - int(pad)
+    ty = zona_y0 + max(0, ((zona_y1 - zona_y0) - bloque_h) // 2)
+
     for i, it in enumerate(items):
         if isinstance(it, (list, tuple)):
             title_i = it[0]
@@ -711,16 +747,17 @@ def add_index(prs, title, items, page=None, highlight=2):
               [[("%02d" % (i + 1), {"size": Pt(20), "bold": True,
                  "color": (T.AMARILLO if hot else T.GRIS_BORDE),
                  "font": T.FONT_MONO})]], align=PP_ALIGN.RIGHT)
-        # Titulo + descripcion abajo.
+        # Titulo + descripcion, pegados entre si. Antes iban a alturas fijas: una
+        # descripcion de una linea dejaba un hueco de dedo entre ambos.
         tcol = T.BLANCO if hot else T.AZUL_OSCURO
         dcol = T.AZUL_TINT if hot else T.GRIS_SUAVE
-        _text(slide, ix, Emu(int(y) + int(card_h) - int(Inches(1.18))),
-              Emu(int(card_w) - 2 * int(pad)), Inches(0.55),
-              [[(title_i, {"size": Pt(16), "color": tcol, "font": T.FONT_HEAD})]])
+        t_opt = {"size": Pt(16), "color": tcol, "font": T.FONT_HEAD}
+        d_opt = {"size": Pt(11), "color": dcol, "font": T.FONT_BODY}
+        t_h, d_h, _ = medidas[i]
+        _text(slide, ix, Emu(ty), tw, Emu(t_h), [[(title_i, t_opt)]])
         if desc_i:
-            _text(slide, ix, Emu(int(y) + int(card_h) - int(Inches(0.6))),
-                  Emu(int(card_w) - 2 * int(pad)), Inches(0.5),
-                  [[(desc_i, {"size": Pt(11), "color": dcol, "font": T.FONT_BODY})]])
+            _text(slide, ix, Emu(ty + t_h + gap_td), tw, Emu(d_h),
+                  [[(desc_i, d_opt)]], line_spacing=1.35)
     _pagenum(slide, page)
     return slide
 
@@ -946,7 +983,11 @@ def add_process(prs, title, steps, page=None, section=""):
 def add_image_feature(prs, title, body, image, stat=None, side="right",
                       subtitle="", page=None, section=""):
     """Texto + imagen. body: str o lista de parrafos. stat: (valor, etiqueta).
-    subtitle: serif opcional bajo el titulo."""
+    subtitle: serif opcional bajo el titulo.
+
+    La ETIQUETA del `stat` es una pastilla estrecha junto a la cifra: dos o tres
+    palabras ("mercados listos", "clientes activos"). Una frase entera desborda.
+    """
     slide = _slide(prs)
     _topbar(slide, section)
 
@@ -1102,7 +1143,8 @@ def add_quote(prs, quote, author, role="", avatar=None, stars=5, image=None,
     for size in (23, 21, 19, 17, 15):
         q_opt = {"size": Pt(size), "italic": True, "color": T.BLANCO,
                  "font": T.FONT_TITLE_EMPH}
-        q_h = int(round(_line_count([(q_txt, q_opt)], inw) * 1.3 * size * 12700))
+        q_h = int(round(_line_count([(q_txt, q_opt)], inw, tol=TOL_ESTRICTA)
+                        * 1.3 * size * 12700))
         if q_h + gap + autor_h <= zona_y1 - zona_y0:
             break
     # Cita y autor son un bloque: se centra en la tarjeta, bajo las estrellas.
@@ -2465,8 +2507,10 @@ def add_stats_feature(prs, title, stats, image, subtitle="", page=None,
 
     pad = int(Inches(0.26))
     badge = int(Inches(0.66))
-    vgap = int(Inches(0.08))
-    value_h = int(Inches(0.52))
+    # La cifra y su descripcion son una pareja: se separan lo justo, y el aire
+    # sobrante se le da al icono, que es quien lo pide. Antes era al reves.
+    vgap = int(Inches(0.24))
+    value_h = int(Inches(0.46))
     for i, st in enumerate(stats):
         r, c = divmod(i, cols)
         x = int(MARGIN) + c * (card_w + gap)
@@ -2486,7 +2530,7 @@ def add_stats_feature(prs, title, stats, image, subtitle="", page=None,
         _text(slide, Emu(x + pad), Emu(vy), Emu(tw), Emu(value_h),
               [[(st["value"], {"size": Pt(32), "bold": True,
                                "color": T.AZUL_OSCURO, "font": T.FONT_NUM})]])
-        ly = vy + value_h + int(Inches(0.06))
+        ly = vy + value_h
         label_h = max(int(Inches(0.24)), y + card_h - pad - ly)
         _text(slide, Emu(x + pad), Emu(ly), Emu(tw), Emu(label_h),
               [[(st["label"], {"size": Pt(11.5), "color": T.GRIS_SUAVE,
@@ -2618,7 +2662,8 @@ def add_next_steps(prs, title, steps, subtitle="", page=None, section=""):
     # alineadas entre columnas.
     tw = col_w - int(Inches(0.3))
     head_opt = {"size": Pt(14), "color": T.AZUL_OSCURO, "font": T.FONT_HEAD}
-    head_lines = max(_line_count([(st[0], head_opt)], Emu(tw)) for st in steps)
+    head_lines = max(_line_count([(st[0], head_opt)], Emu(tw), tol=TOL_ESTRICTA)
+                     for st in steps)
     head_h = head_lines * int(Inches(0.3))
 
     # Todos los circulos iguales: amarillo con el icono en azul marino.

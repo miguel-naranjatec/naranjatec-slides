@@ -76,7 +76,9 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
 - `add_process(prs, title, steps, page, section)`
   Pasos numerados en rejilla **2x2 (max 4)**. `steps`: `(titulo, desc)`.
 - `add_image_feature(prs, title, body, image, stat=None, side="right", subtitle="", page, section)`
-  Texto + imagen + dato. `body`: str o lista de parrafos. `stat`: `(valor, etiqueta)`.
+  Texto + imagen + dato. `body`: str o lista de parrafos. `stat`: `(valor, etiqueta)`,
+  donde la etiqueta son DOS O TRES PALABRAS ("mercados listos"), no una frase:
+  es una pastilla estrecha junto a la cifra y una frase entera la desborda.
 - `add_stats(prs, stats, title="", subtitle="", page, section)`
   Cifras en tarjetas que flotan. `stats`: `[{"value","label"}]`.
 - `add_quote(prs, quote, author, role="", avatar=None, stars=5, image=None, page, section)`

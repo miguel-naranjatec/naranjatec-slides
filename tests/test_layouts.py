@@ -358,6 +358,20 @@ def test_el_extracto_es_literal():
                 "%s: '%s' no aparece literal en la cita" % (t["slug"], trozo[:60])
 
 
+def test_la_medida_estricta_nunca_cuenta_menos_lineas_que_la_optimista():
+    # La raiz de los solapes: _line_count por defecto es OPTIMISTA (+4% de ancho)
+    # y quien reserva sitio para un bloque con algo debajo debe medir estricto.
+    from pptx.util import Inches, Pt, Emu
+    texto = ("Buscabamos una web agil de gestionar que luego podiamos mantener "
+             "actualizada de forma independiente y sin depender de nadie.")
+    opt = {"size": Pt(23), "italic": True, "font": T.FONT_TITLE_EMPH}
+    caja = Emu(int(Inches(7.6)))
+    optimista = s._line_count([(texto, opt)], caja)
+    estricta = s._line_count([(texto, opt)], caja, tol=s.TOL_ESTRICTA)
+    assert s.TOL_ESTRICTA < 1.0
+    assert estricta >= optimista, "la medida estricta no puede ser mas confiada"
+
+
 def test_add_quote_encoge_la_cita_larga_en_vez_de_pisar_al_autor():
     # La cita integra de Importaco (74 palabras) desbordaba la tarjeta y caia
     # sobre el nombre. El cuerpo se elige midiendo, no a ojo.
@@ -388,13 +402,16 @@ def test_por_tema_ordena_por_afinidad():
 
 
 def test_el_extracto_solo_existe_si_la_cita_es_larga():
-    # Un extracto de una cita que ya cabe es trabajo tirado y una fuente de
-    # divergencia entre las dos versiones.
+    # Un extracto de una cita que ya cabe holgada es trabajo tirado y una fuente
+    # de divergencia entre las dos versiones. El umbral son 25 palabras: por ahi
+    # anda la cita de Canon, que a 23pt ocupaba cuatro lineas de la tarjeta.
     TT = _testimonios()
     for t in TT.TESTIMONIOS:
         if t["extracto"]:
-            assert len(t["texto"].split()) >= 40, \
+            assert len(t["texto"].split()) >= 25, \
                 "%s: no necesita extracto" % t["slug"]
+            assert len(t["extracto"].split()) < len(t["texto"].split()), \
+                "%s: el extracto no acorta nada" % t["slug"]
 
 
 # --- el skill propuesta-a-deck --------------------------------------------

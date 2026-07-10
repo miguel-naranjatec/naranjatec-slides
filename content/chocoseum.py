@@ -125,7 +125,8 @@ def build(prs):
             "en campañas termine en más pedidos.",
         ],
         image=T.img("importaco-macbookpro.jpg"),
-        stat=("5", "mercados listos desde el primer día"),
+        # La etiqueta del stat es una pastilla estrecha: dos o tres palabras.
+        stat=("5", "mercados listos"),
         subtitle="WordPress y WooCommerce, sin techo",
         page=n(), section="La solución",
     )
@@ -196,9 +197,10 @@ def build(prs):
         prs,
         "Lo que sostiene la *tienda*",
         [
+            # Dos lineas, como los demas puntos: una tarjeta de tres descompensa.
             ("Bloques reutilizables",
-             "Las páginas se montan combinando bloques maquetados una sola vez. "
-             "Las campañas se crean desde el panel, sin depender de nadie.",
+             "Se maquetan una vez y se combinan siempre. Creas campañas desde "
+             "el panel, sin depender de nadie.",
              T.ICON["storage"]),
             ("Dos caminos de compra",
              "Por producto y por ocasión. El segundo conecta al que busca un "
