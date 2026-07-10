@@ -30,6 +30,7 @@ import lib.slides as s  # noqa: E402
 DECKS = {
     "test": "content.muestrario",
     "nereidas": "content.nereidas",
+    "chocoseum": "content.chocoseum",
 }
 
 
