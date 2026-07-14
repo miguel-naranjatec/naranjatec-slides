@@ -478,6 +478,36 @@ def test_addons_todas_las_tarjetas_con_el_mismo_redondeo(rec, uni):
 
 
 @pytest.mark.parametrize("rec,uni", _COMBIS)
+def test_addons_el_panal_no_pisa_ningun_importe(rec, uni):
+    # El panal de marca va en PRIMER PLANO, sobre la esquina de la tarjeta, y por
+    # tanto puede tapar cosas. Con tres recurrentes las tarjetas son mas bajas y
+    # la pastilla sube: ahi el hexagono naranja se comia la esquina del importe.
+    # Vive en la franja de blanco que queda a la derecha de la pastilla, que esta
+    # libre en las cuatro combinaciones. Nada de adorno encima de un precio.
+    from pptx.enum.shapes import MSO_SHAPE
+
+    def _es_hexagono(sh):
+        # `auto_shape_type` revienta en lo que no es autoshape (fotos, cajas).
+        try:
+            return sh.auto_shape_type == MSO_SHAPE.HEXAGON
+        except (ValueError, AttributeError):
+            return False
+
+    slide = _addons_slide(rec, uni)
+    hexagonos = [sh for sh in slide.shapes if _es_hexagono(sh)]
+    pastillas = [sh for sh in slide.shapes
+                 if sh.has_text_frame and s.EURO in sh.text_frame.text]
+    assert hexagonos and pastillas
+    for h in hexagonos:
+        for p in pastillas:
+            solapa = (h.left < p.left + p.width and p.left < h.left + h.width
+                      and h.top < p.top + p.height and p.top < h.top + h.height)
+            assert not solapa, (
+                "un hexagono del panal pisa el importe '%s'"
+                % p.text_frame.text.strip())
+
+
+@pytest.mark.parametrize("rec,uni", _COMBIS)
 def test_addons_la_etiqueta_respira_lo_mismo_que_las_tarjetas(rec, uni):
     # El hueco entre "PAGO UNICO" y su tarjeta (y el de "SERVICIOS RECURRENTES"
     # con la suya) es el MISMO aire que hay entre tarjetas. Ojo: la caja de la
