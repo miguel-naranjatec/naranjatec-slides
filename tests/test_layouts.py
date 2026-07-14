@@ -389,6 +389,115 @@ def test_con_tres_recurrentes_nada_se_sale_de_su_tarjeta():
                 ((sh.top + sh.height) / 914400)
 
 
+# --- La rejilla de add_addons -----------------------------------------------
+# Tres reglas que se ven de lejos y que ningun test cazaba: que el contenido se
+# quede DENTRO de su tarjeta, que todas las tarjetas tengan el MISMO redondeo y
+# que el aire entre columnas sea el MISMO que entre filas. Se comprueban sobre
+# las cuatro combinaciones que admite el layout, que es donde aparecen.
+
+_REC = [
+    {"name": "Hosting - WordPress optimizado", "price": 35,
+     "desc": "Alojamiento gestionado y optimizado para WordPress.",
+     "icon": T.ICON["server"]},
+    {"name": "Soporte y mantenimiento", "price": 35,
+     "desc": "Actualizaciones, copias de seguridad y soporte continuo del sitio.",
+     "icon": T.ICON["wrench"]},
+    {"name": "Posicionamiento SEO", "price": 90,
+     "desc": "Trabajo continuo de contenidos y posicionamiento en buscadores.",
+     "icon": T.ICON["globe"]},
+]
+_UNI = [
+    {"name": "Llave en mano", "price": 750,
+     "desc": "Entrega de la web lista para publicar: contenidos, configuracion "
+             "y puesta en marcha por NaranjaTec.",
+     "icon": T.ICON["lock"]},
+    {"name": "Migracion del catalogo", "price": 480,
+     "desc": "Pasamos los productos de la tienda actual a la nueva.",
+     "icon": T.ICON["storage"]},
+]
+# (recurrentes, unicos): las cuatro formas que puede tomar la diapositiva.
+_COMBIS = [(_REC[:2], _UNI[:1]), (_REC, _UNI[:1]),
+           (_REC[:2], _UNI), (_REC, [])]
+
+
+def _addons_slide(rec, uni):
+    prs = _prs()
+    s.add_addons(prs, "Complementos a tu *medida*", rec, unicos=uni,
+                 subtitle="Opciones y servicios", note="Sin IVA.", page=1)
+    return prs.slides[0]
+
+
+def _tarjetas(slide):
+    """Las tarjetas blancas: rectangulos redondeados grandes. Las pastillas del
+    importe quedan fuera (su ajuste es 0.5: son pildoras, no tarjetas)."""
+    out = []
+    for sh in slide.shapes:
+        try:
+            adj = sh.adjustments[0] if len(sh.adjustments) else None
+        except Exception:
+            adj = None
+        if adj is None or adj >= 0.5:
+            continue
+        if sh.width > int(s.Inches(3)) and sh.height > int(s.Inches(0.8)):
+            out.append(sh)
+    return out
+
+
+@pytest.mark.parametrize("rec,uni", _COMBIS)
+def test_addons_nada_se_sale_de_su_tarjeta(rec, uni):
+    # La tarjeta alta pedia mas alto del que le daba la zona y se desbordaba por
+    # abajo: la pastilla acababa a 0,12" del borde con 0,34" arriba. Y una fila
+    # con la descripcion larga en columna estrecha se salia entera.
+    slide = _addons_slide(rec, uni)
+    for t in _tarjetas(slide):
+        izq, der = t.left, t.left + t.width
+        arr, aba = t.top, t.top + t.height
+        for sh in slide.shapes:
+            if sh is t or sh.width >= t.width:
+                continue
+            dentro_x = izq <= sh.left and sh.left + sh.width <= der
+            empieza_dentro = arr <= sh.top < aba
+            if not (dentro_x and empieza_dentro):
+                continue
+            texto = sh.text_frame.text[:24] if sh.has_text_frame else "(forma)"
+            assert sh.top + sh.height <= aba, (
+                "'%s' baja hasta %.3f in y su tarjeta acaba en %.3f in"
+                % (texto, (sh.top + sh.height) / 914400.0, aba / 914400.0))
+
+
+@pytest.mark.parametrize("rec,uni", _COMBIS)
+def test_addons_todas_las_tarjetas_con_el_mismo_redondeo(rec, uni):
+    # El `radius=` de python-pptx es una FRACCION del lado corto, no un radio: el
+    # mismo 0.05 daba 0,177" en la tarjeta alta y 0,083" en las filas, juntas en
+    # la misma diapositiva. `_radio()` lo convierte; esto lo vigila.
+    radios = set()
+    for t in _tarjetas(_addons_slide(rec, uni)):
+        radios.add(round(t.adjustments[0] * min(t.width, t.height) / 914400.0, 3))
+    assert len(radios) == 1, "tarjetas con radios distintos: %s" % sorted(radios)
+    assert radios.pop() == round(s.ADDON_RADIO / 914400.0, 3)
+
+
+@pytest.mark.parametrize("rec,uni", _COMBIS)
+def test_addons_el_aire_horizontal_es_el_mismo_que_el_vertical(rec, uni):
+    # Antes: 0,45" entre columnas y 0,24" entre filas. La rejilla no cuadraba.
+    tarjetas = _tarjetas(_addons_slide(rec, uni))
+    huecos = set()
+    # Lado a lado: las dos que empiezan a la misma altura.
+    for a in tarjetas:
+        for b in tarjetas:
+            if a.top == b.top and a.left < b.left:
+                huecos.add(b.left - (a.left + a.width))
+    # Una sobre otra: solo las CONTIGUAS de cada columna. Comparar la primera con
+    # la tercera daria el hueco de dos tarjetas, que no es un aire.
+    for izq in {t.left for t in tarjetas}:
+        col = sorted((t for t in tarjetas if t.left == izq), key=lambda t: t.top)
+        for a, b in zip(col, col[1:]):
+            huecos.add(b.top - (a.top + a.height))
+    assert huecos, "no hay dos tarjetas que comparar"
+    assert huecos == {s.ADDON_GAP}, \
+        "aires distintos: %s" % sorted(round(h / 914400.0, 3) for h in huecos)
+
+
 def test_la_fija_de_complementos_construye_y_es_adaptable():
     F = _fijas()
     prs = _prs()

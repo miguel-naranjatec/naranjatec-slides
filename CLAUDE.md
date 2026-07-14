@@ -230,6 +230,10 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
   `_glass_card` (simula backdrop-blur recortando la foto de fondo y aplicando
   `a:blur`). Sobre fondo solido queda lavado: no usar.
 - `python-pptx` 1.x NO tiene `pptx.enum.line`; el dash se pone via XML crudo.
+- **El `radius=` de un `ROUNDED_RECTANGLE` NO es un radio**: es una FRACCION del
+  lado CORTO de la forma. El mismo `radius=0.05` redondea una tarjeta alta de
+  3,5" a 0,177" y una fila de 1,6" a 0,083" -el doble en una que en otra- y
+  juntas en la misma diapositiva canta. Para un radio absoluto, `_radio(w, h, r)`.
 
 ## Verificacion visual
 

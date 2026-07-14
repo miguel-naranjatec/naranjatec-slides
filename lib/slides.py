@@ -2788,6 +2788,24 @@ def add_blocks_grid(prs, title, blocks, subtitle="", page=None, section=""):
     return slides
 
 
+ADDON_GAP = int(Inches(0.26))       # el MISMO aire entre columnas y entre filas
+ADDON_RADIO = int(Inches(0.14))     # el MISMO redondeo en todas las tarjetas
+
+
+def _radio(w, h, r=ADDON_RADIO):
+    """Convierte un radio ABSOLUTO en el ajuste que espera python-pptx.
+
+    El `radius=` de un ROUNDED_RECTANGLE no es un radio: es una fraccion del lado
+    CORTO de la forma. Con el mismo `radius=0.05`, una tarjeta alta de 3,5" salia
+    redondeada a 0,177" y una fila de 1,6" a 0,083": el doble en una que en otra,
+    juntas en la misma diapositiva. Aqui se pide el radio en EMU y sale el ajuste.
+    """
+    corto = min(int(w), int(h))
+    if corto <= 0:
+        return 0.0
+    return max(0.0, min(0.5, float(int(r)) / corto))
+
+
 def _addon_pill(slide, x, y, w, h, texto):
     """Pastilla dorada con el importe. La usan las dos columnas."""
     pill = _rect(slide, Emu(x), Emu(y), Emu(w), Emu(h), fill=T.AMARILLO,
@@ -2805,8 +2823,12 @@ def _addon_geom(item, w, compacta=False):
     preguntar cuanto alto pide cada una y repartir la columna con ese dato. La
     altura de una tarjeta la manda su contenido, nunca el hueco que sobra."""
     pad = int(Inches(0.20 if compacta else 0.30))
-    dia = int(Inches(0.54 if compacta else 0.78))
-    g_it = int(Inches(0.20 if compacta else 0.24))   # icono -> texto
+    # El circulo manda el alto de la tarjeta (es mas alto que el texto), asi que
+    # es la palanca para que la fila LLENE su hueco: con uno pequeno, la tarjeta
+    # pedia 1,38", la columna la estiraba a 1,65" y esos 0,27" de aire muerto se
+    # leian como un hueco enorme entre tarjetas.
+    dia = int(Inches(0.54 if compacta else 0.95))
+    g_it = int(Inches(0.20 if compacta else 0.26))   # icono -> texto
     g_nd = int(Inches(0.06 if compacta else 0.10))   # nombre -> descripcion
     ph = int(Inches(0.44 if compacta else 0.50))
     n_pt = 14.0 if compacta else 15.0
@@ -2843,7 +2865,7 @@ def _addon_fila(slide, x, y, w, h, item, pill_txt, compacta=False):
     amontonarse debajo del texto."""
     g = _addon_geom(item, w, compacta)
     card = _rect(slide, Emu(x), Emu(y), Emu(w), Emu(h), fill=T.BLANCO,
-                 shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.05)
+                 shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=_radio(w, h))
     _soft_shadow(card, alpha=12000)
 
     by = y + max(g["pad"], (h - g["bloque"]) // 2)
@@ -2865,17 +2887,22 @@ def _addon_fila(slide, x, y, w, h, item, pill_txt, compacta=False):
                 g["pw"], g["ph"], pill_txt)
 
 
-HERO_DIA = (int(Inches(0.9)), int(Inches(1.5)))     # circulo: minimo y maximo
+HERO_DIA = (int(Inches(0.80)), int(Inches(1.30)))   # circulo: minimo y maximo
+HERO_AIRE = (int(Inches(0.16)), int(Inches(0.34)))  # hueco circulo/nombre/pastilla
 
 
 def _addon_hero_geom(item, w):
-    """Igual que `_addon_geom`, para la tarjeta alta. `alto` es lo MINIMO que pide
-    (con el circulo pequeno): por debajo de eso el contenido se sale."""
-    pad = int(Inches(0.34))
+    """Igual que `_addon_geom`, para la tarjeta alta.
+
+    `rigido` es lo que NO se puede comprimir: el nombre, la descripcion y la
+    pastilla. El circulo y los dos huecos grandes son elasticos, y con ellos la
+    tarjeta se ajusta EXACTO al alto que le den. `alto` es lo que pide para verse
+    bien; si la columna le da menos, encoge, pero nunca se sale.
+    """
+    pad = int(Inches(0.30))
     tw = w - 2 * pad
-    pw, ph = int(Inches(2.1)), int(Inches(0.62))
-    g_cn, g_nd, g_dp = (int(Inches(0.26)), int(Inches(0.10)),
-                        int(Inches(0.26)))
+    pw, ph = int(Inches(2.1)), int(Inches(0.58))
+    g_nd = int(Inches(0.10))                        # nombre -> descripcion
     n_opt = {"size": Pt(20), "color": T.AZUL_OSCURO, "font": T.FONT_HEAD}
     n_h = int(round(_line_count([(item["name"], n_opt)], Emu(tw),
                                 tol=TOL_ESTRICTA) * 1.22 * 20 * 12700))
@@ -2883,43 +2910,55 @@ def _addon_hero_geom(item, w):
     d_opt = {"size": Pt(10.5), "color": T.GRIS_SUAVE, "font": T.FONT_BODY}
     d_h = int(round(_line_count([(desc, d_opt)], Emu(tw), tol=TOL_ESTRICTA)
                     * 1.4 * 10.5 * 12700)) if desc else 0
-    # Todo menos el circulo, que es lo unico elastico de la tarjeta.
-    fijo = n_h + g_cn + (g_nd + d_h if desc else 0) + g_dp + ph + 2 * pad
-    return {"pad": pad, "tw": tw, "pw": pw, "ph": ph, "g_cn": g_cn,
-            "g_nd": g_nd, "g_dp": g_dp, "n_opt": n_opt, "n_h": n_h,
-            "d_opt": d_opt, "d_h": d_h, "desc": desc, "fijo": fijo,
-            "alto": fijo + HERO_DIA[0]}
+    rigido = n_h + (g_nd + d_h if desc else 0) + ph
+    return {"pad": pad, "tw": tw, "pw": pw, "ph": ph, "g_nd": g_nd,
+            "n_opt": n_opt, "n_h": n_h, "d_opt": d_opt, "d_h": d_h,
+            "desc": desc, "rigido": rigido,
+            "alto": 2 * pad + rigido + HERO_DIA[0] + 2 * HERO_AIRE[1]}
 
 
 def _addon_hero(slide, x, y, w, h, item, pill_txt):
     """Tarjeta alta del pago unico: circulo dorado, nombre, descripcion y la
-    pastilla del importe. Todo es un bloque MEDIDO y centrado en la tarjeta: con
-    alturas fijas, la pastilla acababa encima del nombre."""
+    pastilla del importe, centrados y con el MISMO padding arriba que abajo.
+
+    El circulo y los dos huecos absorben la diferencia entre lo que la tarjeta
+    pide y el alto que le da la columna. Antes el circulo era lo unico elastico y
+    tenia un minimo: cuando la zona se quedaba corta, el bloque se desbordaba por
+    abajo y la pastilla acababa pegada al borde (0,12" de padding contra 0,34"
+    arriba).
+    """
     g = _addon_hero_geom(item, w)
     card = _rect(slide, Emu(x), Emu(y), Emu(w), Emu(h), fill=T.BLANCO,
-                 shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.05)
+                 shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=_radio(w, h))
     _soft_shadow(card, alpha=12000)
 
-    # El circulo cede espacio si el texto lo necesita; nunca al reves. Y crece si
-    # la columna de al lado obliga a la tarjeta a ser mas alta de lo que pide.
-    dia = max(HERO_DIA[0], min(HERO_DIA[1], h - g["fijo"]))
-    bloque = g["fijo"] - 2 * g["pad"] + dia
-    cy = y + max(g["pad"], (h - bloque) // 2)
+    # Lo que queda para el circulo y los dos huecos, una vez servido lo rigido.
+    espacio = h - 2 * g["pad"] - g["rigido"]
+    aire = max(HERO_AIRE[0], min(HERO_AIRE[1], int(espacio * 0.18)))
+    dia = max(HERO_DIA[0], min(HERO_DIA[1], espacio - 2 * aire))
+    if dia + 2 * aire > espacio:
+        # Ni con el circulo minimo: el circulo cede por debajo de su minimo antes
+        # que el texto, que es el que lleva el mensaje.
+        dia = max(int(Inches(0.5)), espacio - 2 * HERO_AIRE[0])
+        aire = max(0, (espacio - dia) // 2)
+    else:
+        aire += (espacio - dia - 2 * aire) // 2     # el sobrante, a los dos huecos
 
+    cy = y + g["pad"]
     _rect(slide, Emu(x + (w - dia) // 2), Emu(cy), Emu(dia), Emu(dia),
           fill=T.AMARILLO, shape=MSO_SHAPE.OVAL)
     _icon(slide, Emu(x + (w - dia) // 2), Emu(cy), Emu(dia),
           item.get("icon", T.ICON["check"]), color=T.AZUL_OSCURO, nudge=0.0)
 
-    ny = cy + dia + g["g_cn"]
+    ny = cy + dia + aire
     _text(slide, Emu(x + g["pad"]), Emu(ny), Emu(g["tw"]), Emu(g["n_h"]),
           [[(item["name"], g["n_opt"])]], align=PP_ALIGN.CENTER)
-    py = ny + g["n_h"] + g["g_dp"]
+    py = ny + g["n_h"] + aire
     if g["desc"]:
         _text(slide, Emu(x + g["pad"]), Emu(ny + g["n_h"] + g["g_nd"]),
               Emu(g["tw"]), Emu(g["d_h"]), [[(g["desc"], g["d_opt"])]],
               align=PP_ALIGN.CENTER, line_spacing=1.4)
-        py = ny + g["n_h"] + g["g_nd"] + g["d_h"] + g["g_dp"]
+        py = ny + g["n_h"] + g["g_nd"] + g["d_h"] + aire
     _addon_pill(slide, x + (w - g["pw"]) // 2, py, g["pw"], g["ph"], pill_txt)
 
 
@@ -2965,7 +3004,9 @@ def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
     g_lbl = int(Inches(0.16))
     zona_y = top + lbl_h + g_lbl
     zona_h = bottom - zona_y
-    gap = int(Inches(0.24))
+    # Un unico aire para todo: entre columnas y entre tarjetas. Antes el
+    # horizontal era 0,45" y el vertical 0,24", y la rejilla no cuadraba.
+    gap = ADDON_GAP
 
     n = len(recurrentes)
     # Con tres servicios cada tarjeta se queda por debajo de 1,1" y todo tiene que
@@ -2976,7 +3017,7 @@ def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
         # Dos pagos unicos van en fila, y una fila necesita mas ancho que la
         # tarjeta alta: icono, nombre y pastilla comparten linea.
         uw = int(Inches(4.1 if len(unicos) == 1 else 4.9))
-        rx = int(MARGIN) + uw + int(Inches(0.45))
+        rx = int(MARGIN) + uw + gap
         rw = int(T.SLIDE_W) - int(MARGIN) - rx
     else:
         uw = 0
@@ -2995,19 +3036,31 @@ def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
             item["desc"] = (item.get("desc", "").rstrip() + " " + anual).strip()
         items_r.append(item)
 
-    # Cuanto alto PIDE cada columna. Antes las tarjetas se estiraban hasta el
-    # borde inferior pasase lo que pasase, asi que dos servicios cortos se comian
-    # 3,7" de slide y el aire sobrante se leia como un hueco enorme entre ellas.
-    # Ahora manda el contenido: la columna mas alta fija el alto del bloque y la
-    # otra se ajusta a el, de modo que las dos TERMINAN en la misma linea.
-    alto_r = (sum(_addon_geom(it, rw, compacta)["alto"] for it in items_r)
-              + gap * (n - 1))
-    if len(unicos) == 1:
-        alto_u = _addon_hero_geom(unicos[0], uw)["alto"]
-    elif unicos:
-        alto_u = sum(_addon_geom(it, uw)["alto"] for it in unicos) + gap
-    else:
-        alto_u = 0
+    # Cuanto alto PIDE cada columna de filas. Antes las tarjetas se estiraban
+    # hasta el borde inferior pasase lo que pasase, asi que dos servicios cortos
+    # se comian 3,7" de slide y el aire sobrante se leia como un hueco enorme
+    # entre ellas. Ahora manda el contenido: la columna mas alta fija el alto del
+    # bloque y la otra se ajusta, de modo que las dos TERMINAN en la misma linea.
+    def _piden(compacta):
+        r = (sum(_addon_geom(it, rw, compacta)["alto"] for it in items_r)
+             + gap * (n - 1))
+        u = (sum(_addon_geom(it, uw, compacta)["alto"] for it in unicos) + gap
+             if len(unicos) == 2 else 0)
+        return r, u
+
+    alto_r, alto_uf = _piden(compacta)
+    if not compacta and max(alto_r, alto_uf) > zona_h:
+        # Lo que piden las filas no cabe en la zona. Se aprieta TODA la
+        # diapositiva, no una tarjeta suelta: dos densidades distintas conviviendo
+        # se ven peor que una apretada. Sin esto, la tarjeta se quedaba corta y el
+        # contenido se salia por debajo del borde blanco.
+        compacta = True
+        alto_r, alto_uf = _piden(compacta)
+
+    # La tarjeta alta es elastica (ver `_addon_hero`): que pida mas que la zona no
+    # obliga a apretar nada, encoge ella sola.
+    alto_u = (_addon_hero_geom(unicos[0], uw)["alto"] if len(unicos) == 1
+              else alto_uf)
 
     # El bloque se centra en la zona: lo que sobra no se reparte entre las
     # tarjetas, se deja como margen arriba y abajo.
@@ -3029,7 +3082,7 @@ def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
             ch = (alto - gap) // 2
             for i, it in enumerate(unicos):
                 _addon_fila(slide, int(MARGIN), cards_y + i * (ch + gap), uw, ch,
-                            it, _fmt_eur(it["price"]))
+                            it, _fmt_eur(it["price"]), compacta=compacta)
 
     _etiqueta(rx, rw, label_recurrente)
     ch = (alto - gap * (n - 1)) // n
