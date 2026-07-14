@@ -288,6 +288,14 @@ Lo que NO se hace: pedirle logos y fotos como requisito para generar el deck, ni
 bajar imagenes de un banco sin que el usuario lo pida. Las neutras (oficina,
 escritorios, planos de portatil) son material legitimo y con ellas se entrega.
 
+Si el usuario QUIERE fotografia real del sector, existe el stock: la baja el a mano
+de [Burst](https://www.shopify.com/stock-photos) (uso comercial libre, sin
+atribucion) al buzon `stock-entrada/`, y `python scripts/add_stock.py` la optimiza,
+la etiqueta por sector y anota el credito. A partir de ahi `IM.advertencia()` ya la
+cuenta. Ofrecelo, no lo hagas por tu cuenta: elegir la foto es un juicio suyo, y por
+eso no hay ningun script que busque en una API. Y aunque haya stock, sigue avisando:
+es fotografia generica, y las fotos del cliente siguen siendo mejores.
+
 ## Paso 8. Escribir el deck
 
 `content/<alias>.py` con `OUTFILE`, `TITULO` y `build(prs)`, con el contador

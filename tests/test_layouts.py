@@ -269,13 +269,60 @@ def test_el_catalogo_cubre_todas_las_imagenes_del_disco():
 
 
 def test_la_advertencia_nunca_calla():
-    # Aunque un sector tenga mockups, sigue sin haber foto de producto: la
-    # funcion siempre tiene algo que decir, y lo dice.
+    # La biblioteca PROPIA no tiene fotografia de producto de ningun sector: son
+    # mockups de web. Mientras siga siendo asi, la funcion tiene algo que decir de
+    # cada sector, y lo dice.
     IM = _imagenes()
-    assert IM.HAY_FOTOGRAFIA_DE_PRODUCTO is False
     for s in IM.sectores():
+        assert IM.fotos_de_producto(s) == [], s
         aviso = IM.advertencia(s)
         assert aviso and "mockup" in aviso.lower(), s
+
+
+def _con_stock(tmp_path, monkeypatch, **campos):
+    """Una biblioteca de mentira con UNA foto de stock, para poder probar que el
+    catalogo la ve. Se parchean IMG_DIR y STOCK_META: `catalogo()` lee del disco."""
+    import json
+    IM = _imagenes()
+    stock = tmp_path / "stock"
+    stock.mkdir()
+    (stock / "alimentacion-bombones.jpg").write_bytes(b"")
+    ficha = {"sector": "alimentacion", "desc": "bombones artesanos",
+             "tipo": "producto", "autor": "Ana Ruiz",
+             "fuente": "Burst (Shopify)", "url": ""}
+    ficha.update(campos)
+    (stock / "stock.json").write_text(
+        json.dumps({"alimentacion-bombones.jpg": ficha}), encoding="utf-8")
+    monkeypatch.setattr(IM, "IMG_DIR", tmp_path)
+    monkeypatch.setattr(IM, "STOCK_META", stock / "stock.json")
+    return IM
+
+
+def test_con_stock_la_advertencia_deja_de_negar_la_foto_de_producto(
+        tmp_path, monkeypatch):
+    # En cuanto entra una foto REAL de un sector, seguir diciendo que no hay
+    # fotografia de producto es mentira. Por eso la advertencia consulta el stock
+    # en vez de negarlo con una constante. Pero sigue sin callar: el stock es
+    # generico por definicion, y las fotos del cliente siguen siendo mejores.
+    IM = _con_stock(tmp_path, monkeypatch)
+    assert IM.fotos_de_producto("alimentacion") == [
+        "stock/alimentacion-bombones.jpg"]
+    aviso = IM.advertencia("alimentacion")
+    assert "STOCK" in aviso, aviso
+    assert "fotos SUYAS" in aviso, "ya no empuja a pedir fotos al cliente"
+
+
+def test_una_foto_de_stock_sin_ficha_se_canta_como_sin_catalogar(
+        tmp_path, monkeypatch):
+    # El sector del stock no se deduce del nombre del fichero: lo dice quien la
+    # metio, mirandola. Si la foto esta en disco pero no en stock.json, hay que
+    # cantarlo, no inventarle un sector. Lo caza `test_ninguna_imagen_se_queda_
+    # _sin_catalogar` en la biblioteca real.
+    IM = _con_stock(tmp_path, monkeypatch)
+    (IM.IMG_DIR / "stock" / "colada.jpg").write_bytes(b"")
+    filas = {r: s for r, s, _, _ in IM.catalogo()}
+    assert filas["stock/colada.jpg"] == "desconocido"
+    assert filas["stock/alimentacion-bombones.jpg"] == "alimentacion"
 
 
 def test_buscar_filtra_por_sector_y_tipo():

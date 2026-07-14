@@ -287,8 +287,20 @@ poniendo pulseras en una propuesta de chocolate.
 
 Usa `brand/imagenes.py` (`--list`, `--sector X`, `IM.buscar()`), que etiqueta cada
 imagen con el SECTOR de la web que se ve. `IM.advertencia(sector)` no calla nunca:
-aqui no hay fotografia de producto de ningun sector. Se entrega con las neutras y
-se AVISA. Nunca se piden logos ni fotos como requisito.
+la biblioteca propia no tiene fotografia de producto de ningun sector. Se entrega
+con las neutras y se AVISA. Nunca se piden logos ni fotos como requisito.
+
+Lo unico que rompe eso es el STOCK (`brand/assets/img/stock/`): fotografia real,
+bajada A MANO de [Burst](https://www.shopify.com/stock-photos) (uso comercial
+libre, sin atribucion) o Pexels, y procesada con `python scripts/add_stock.py`
+(optimiza, renombra, pregunta el sector, registra y anota el credito). El buzon es
+`stock-entrada/`, que esta gitignorado.
+
+**La busqueda NO se automatiza, y es deliberado.** Un script que busca "chocolate"
+en una API y se baja los diez primeros resultados comete el MISMO error que elegir
+por el nombre del fichero, solo que contra un catalogo de millones. Un deck necesita
+seis u ocho fotos: elegirlas es un juicio, y lo hace una persona. (Burst ademas
+prohibe el scraping en sus terminos, §1.9.)
 
 ## Marca (resumen)
 
