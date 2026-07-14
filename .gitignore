@@ -1,6 +1,11 @@
 # Presentaciones generadas (se regeneran con build/build.py)
 output/
 
+# Buzon de descargas de stock sin procesar: lo procesa scripts/add_stock.py y el
+# resultado va a brand/assets/img/stock/. El original bruto no se sube.
+stock-entrada/*
+!stock-entrada/README.md
+
 # Zips de fuentes: los TTF ya estan sueltos en brand/assets/fonts/
 *.zip
 
