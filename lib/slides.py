@@ -2800,71 +2800,82 @@ def _addon_pill(slide, x, y, w, h, texto):
     return pill
 
 
-def _addon_fila(slide, x, y, w, h, item, pill_txt):
-    """Tarjeta horizontal: circulo de icono, nombre, pastilla, y descripcion."""
-    card = _rect(slide, Emu(x), Emu(y), Emu(w), Emu(h), fill=T.BLANCO,
-                 shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.05)
-    _soft_shadow(card, alpha=12000)
-
-    # Con tres servicios la tarjeta baja de 1,25" y todo tiene que apretarse: si
-    # no, la descripcion se pinta por debajo del borde blanco.
-    compacta = h < int(Inches(1.25))
-    pad = int(Inches(0.20 if compacta else 0.28))
-    dia = int(Inches(0.54 if compacta else 0.62))
+def _addon_geom(item, w, compacta=False):
+    """Medidas de una tarjeta-fila ANTES de pintarla, para que `add_addons` pueda
+    preguntar cuanto alto pide cada una y repartir la columna con ese dato. La
+    altura de una tarjeta la manda su contenido, nunca el hueco que sobra."""
+    pad = int(Inches(0.20 if compacta else 0.30))
+    dia = int(Inches(0.54 if compacta else 0.78))
+    g_it = int(Inches(0.20 if compacta else 0.24))   # icono -> texto
+    g_nd = int(Inches(0.06 if compacta else 0.10))   # nombre -> descripcion
+    ph = int(Inches(0.44 if compacta else 0.50))
+    n_pt = 14.0 if compacta else 15.0
+    d_pt = 9.0 if compacta else 9.5
     # La pastilla encoge con la tarjeta. Fija a 1.6" dejaba al nombre 0,9" de
     # ancho en la columna estrecha, y PowerPoint parte la palabra: "Importa cion".
     pw = min(int(Inches(1.6)), max(int(Inches(1.15)), int(w * 0.28)))
-    ph = int(Inches(0.44 if compacta else 0.5))
-    d_pt = 9.0 if compacta else 9.5
 
-    _rect(slide, Emu(x + pad), Emu(y + pad), Emu(dia), Emu(dia), fill=T.AZUL,
-          shape=MSO_SHAPE.OVAL)
-    _icon(slide, Emu(x + pad), Emu(y + pad), Emu(dia),
-          item.get("icon", T.ICON["cloud"]), color=T.BLANCO, nudge=0.0)
-
-    nx = x + pad + dia + int(Inches(0.24))
-    nw = (x + w - pad - pw - int(Inches(0.2))) - nx
-    n_opt = {"size": Pt(15), "color": T.AZUL_OSCURO, "font": T.FONT_HEAD}
-    n_lin = _line_count([(item["name"], n_opt)], Emu(nw), tol=TOL_ESTRICTA)
-    n_h = int(round(n_lin * 1.22 * 15 * 12700))
-    _text(slide, Emu(nx), Emu(y + pad), Emu(nw), Emu(n_h),
-          [[(item["name"], n_opt)]])
-
+    nx = pad + dia + g_it
+    nw = w - nx - pad - pw - int(Inches(0.20))
+    n_opt = {"size": Pt(n_pt), "color": T.AZUL_OSCURO, "font": T.FONT_HEAD}
+    n_h = int(round(_line_count([(item["name"], n_opt)], Emu(nw),
+                                tol=TOL_ESTRICTA) * 1.22 * n_pt * 12700))
     desc = item.get("desc", "")
     d_opt = {"size": Pt(d_pt), "color": T.GRIS_SUAVE, "font": T.FONT_BODY}
-    if desc:
-        g_nd = int(Inches(0.06 if compacta else 0.14))
-        if compacta:
-            # Debajo del icono no cabe: la altura del circulo se desperdicia. La
-            # descripcion va en la columna del nombre, a su misma sangria.
-            dx, dw, dy = nx, nw, y + pad + n_h + g_nd
-        else:
-            dx, dw, dy = x + pad, w - 2 * pad, y + pad + max(n_h, dia) + g_nd
-        d_h = int(round(_line_count([(desc, d_opt)], Emu(dw), tol=TOL_ESTRICTA)
-                        * 1.32 * d_pt * 12700))
-        d_h = min(d_h, max(int(Inches(0.22)), y + h - pad - dy))
-        _text(slide, Emu(dx), Emu(dy), Emu(dw), Emu(d_h), [[(desc, d_opt)]],
-              line_spacing=1.32)
+    d_h = int(round(_line_count([(desc, d_opt)], Emu(nw), tol=TOL_ESTRICTA)
+                    * 1.32 * d_pt * 12700)) if desc else 0
 
-    # La pastilla se centra con el nombre; en compacta, con toda la tarjeta.
-    py = (y + (h - ph) // 2) if compacta else (y + pad + (n_h - ph) // 2)
-    _addon_pill(slide, x + w - pad - pw, py, pw, ph, pill_txt)
+    # Nombre y descripcion comparten la columna de la derecha del icono. Colgar la
+    # descripcion DEBAJO del circulo y a todo el ancho (como se hacia antes) abria
+    # un hueco muerto entre el nombre y ella, y dejaba el texto en forma de L.
+    txt_h = n_h + (g_nd + d_h if desc else 0)
+    bloque = max(dia, txt_h)
+    return {"pad": pad, "dia": dia, "g_nd": g_nd, "ph": ph, "pw": pw,
+            "nx": nx, "nw": nw, "n_opt": n_opt, "n_h": n_h, "d_opt": d_opt,
+            "d_h": d_h, "desc": desc, "txt_h": txt_h, "bloque": bloque,
+            "alto": bloque + 2 * pad}
 
 
-def _addon_hero(slide, x, y, w, h, item, pill_txt):
-    """Tarjeta alta del pago unico: circulo dorado, nombre, descripcion y la
-    pastilla del importe. Todo es un bloque MEDIDO y centrado en la tarjeta: con
-    alturas fijas, la pastilla acababa encima del nombre."""
+def _addon_fila(slide, x, y, w, h, item, pill_txt, compacta=False):
+    """Tarjeta horizontal: circulo de icono, nombre + descripcion a su derecha y
+    pastilla del importe. El contenido se CENTRA en la tarjeta: si la columna le
+    da mas alto del que pide, el aire sobrante se reparte arriba y abajo en vez de
+    amontonarse debajo del texto."""
+    g = _addon_geom(item, w, compacta)
     card = _rect(slide, Emu(x), Emu(y), Emu(w), Emu(h), fill=T.BLANCO,
                  shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.05)
     _soft_shadow(card, alpha=12000)
 
+    by = y + max(g["pad"], (h - g["bloque"]) // 2)
+    iy = by + (g["bloque"] - g["dia"]) // 2
+    _rect(slide, Emu(x + g["pad"]), Emu(iy), Emu(g["dia"]), Emu(g["dia"]),
+          fill=T.AZUL, shape=MSO_SHAPE.OVAL)
+    _icon(slide, Emu(x + g["pad"]), Emu(iy), Emu(g["dia"]),
+          item.get("icon", T.ICON["cloud"]), color=T.BLANCO, nudge=0.0)
+
+    ty = by + (g["bloque"] - g["txt_h"]) // 2
+    _text(slide, Emu(x + g["nx"]), Emu(ty), Emu(g["nw"]), Emu(g["n_h"]),
+          [[(item["name"], g["n_opt"])]])
+    if g["desc"]:
+        _text(slide, Emu(x + g["nx"]), Emu(ty + g["n_h"] + g["g_nd"]),
+              Emu(g["nw"]), Emu(g["d_h"]), [[(g["desc"], g["d_opt"])]],
+              line_spacing=1.32)
+
+    _addon_pill(slide, x + w - g["pad"] - g["pw"], y + (h - g["ph"]) // 2,
+                g["pw"], g["ph"], pill_txt)
+
+
+HERO_DIA = (int(Inches(0.9)), int(Inches(1.5)))     # circulo: minimo y maximo
+
+
+def _addon_hero_geom(item, w):
+    """Igual que `_addon_geom`, para la tarjeta alta. `alto` es lo MINIMO que pide
+    (con el circulo pequeno): por debajo de eso el contenido se sale."""
     pad = int(Inches(0.34))
     tw = w - 2 * pad
     pw, ph = int(Inches(2.1)), int(Inches(0.62))
-    g_cn, g_nd, g_dp = (int(Inches(0.30)), int(Inches(0.12)),
-                        int(Inches(0.30)))
-
+    g_cn, g_nd, g_dp = (int(Inches(0.26)), int(Inches(0.10)),
+                        int(Inches(0.26)))
     n_opt = {"size": Pt(20), "color": T.AZUL_OSCURO, "font": T.FONT_HEAD}
     n_h = int(round(_line_count([(item["name"], n_opt)], Emu(tw),
                                 tol=TOL_ESTRICTA) * 1.22 * 20 * 12700))
@@ -2872,28 +2883,44 @@ def _addon_hero(slide, x, y, w, h, item, pill_txt):
     d_opt = {"size": Pt(10.5), "color": T.GRIS_SUAVE, "font": T.FONT_BODY}
     d_h = int(round(_line_count([(desc, d_opt)], Emu(tw), tol=TOL_ESTRICTA)
                     * 1.4 * 10.5 * 12700)) if desc else 0
-
-    # El circulo cede espacio si el texto lo necesita; nunca al reves.
+    # Todo menos el circulo, que es lo unico elastico de la tarjeta.
     fijo = n_h + g_cn + (g_nd + d_h if desc else 0) + g_dp + ph + 2 * pad
-    dia = max(int(Inches(0.9)), min(int(Inches(1.5)), h - fijo))
+    return {"pad": pad, "tw": tw, "pw": pw, "ph": ph, "g_cn": g_cn,
+            "g_nd": g_nd, "g_dp": g_dp, "n_opt": n_opt, "n_h": n_h,
+            "d_opt": d_opt, "d_h": d_h, "desc": desc, "fijo": fijo,
+            "alto": fijo + HERO_DIA[0]}
 
-    bloque = dia + g_cn + n_h + (g_nd + d_h if desc else 0) + g_dp + ph
-    cy = y + max(pad, (h - bloque) // 2)
+
+def _addon_hero(slide, x, y, w, h, item, pill_txt):
+    """Tarjeta alta del pago unico: circulo dorado, nombre, descripcion y la
+    pastilla del importe. Todo es un bloque MEDIDO y centrado en la tarjeta: con
+    alturas fijas, la pastilla acababa encima del nombre."""
+    g = _addon_hero_geom(item, w)
+    card = _rect(slide, Emu(x), Emu(y), Emu(w), Emu(h), fill=T.BLANCO,
+                 shape=MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.05)
+    _soft_shadow(card, alpha=12000)
+
+    # El circulo cede espacio si el texto lo necesita; nunca al reves. Y crece si
+    # la columna de al lado obliga a la tarjeta a ser mas alta de lo que pide.
+    dia = max(HERO_DIA[0], min(HERO_DIA[1], h - g["fijo"]))
+    bloque = g["fijo"] - 2 * g["pad"] + dia
+    cy = y + max(g["pad"], (h - bloque) // 2)
 
     _rect(slide, Emu(x + (w - dia) // 2), Emu(cy), Emu(dia), Emu(dia),
           fill=T.AMARILLO, shape=MSO_SHAPE.OVAL)
     _icon(slide, Emu(x + (w - dia) // 2), Emu(cy), Emu(dia),
           item.get("icon", T.ICON["check"]), color=T.AZUL_OSCURO, nudge=0.0)
 
-    ny = cy + dia + g_cn
-    _text(slide, Emu(x + pad), Emu(ny), Emu(tw), Emu(n_h), [[(item["name"], n_opt)]],
-          align=PP_ALIGN.CENTER)
-    py = ny + n_h + g_dp
-    if desc:
-        _text(slide, Emu(x + pad), Emu(ny + n_h + g_nd), Emu(tw), Emu(d_h),
-              [[(desc, d_opt)]], align=PP_ALIGN.CENTER, line_spacing=1.4)
-        py = ny + n_h + g_nd + d_h + g_dp
-    _addon_pill(slide, x + (w - pw) // 2, py, pw, ph, pill_txt)
+    ny = cy + dia + g["g_cn"]
+    _text(slide, Emu(x + g["pad"]), Emu(ny), Emu(g["tw"]), Emu(g["n_h"]),
+          [[(item["name"], g["n_opt"])]], align=PP_ALIGN.CENTER)
+    py = ny + g["n_h"] + g["g_dp"]
+    if g["desc"]:
+        _text(slide, Emu(x + g["pad"]), Emu(ny + g["n_h"] + g["g_nd"]),
+              Emu(g["tw"]), Emu(g["d_h"]), [[(g["desc"], g["d_opt"])]],
+              align=PP_ALIGN.CENTER, line_spacing=1.4)
+        py = ny + g["n_h"] + g["g_nd"] + g["d_h"] + g["g_dp"]
+    _addon_pill(slide, x + (w - g["pw"]) // 2, py, g["pw"], g["ph"], pill_txt)
 
 
 def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
@@ -2935,13 +2962,15 @@ def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
 
     bottom = int(Inches(6.35))
     lbl_h = int(Inches(0.3))
-    cards_y = top + lbl_h + int(Inches(0.16))
-    gap = int(Inches(0.34))
+    g_lbl = int(Inches(0.16))
+    zona_y = top + lbl_h + g_lbl
+    zona_h = bottom - zona_y
+    gap = int(Inches(0.24))
 
-    def _etiqueta(x, w, txt):
-        _text(slide, Emu(x), Emu(top), Emu(w), Emu(lbl_h),
-              [[(txt.upper(), {"size": Pt(10), "bold": True, "color": T.AZUL,
-                               "font": T.FONT_MONO, "spacing": 140})]])
+    n = len(recurrentes)
+    # Con tres servicios cada tarjeta se queda por debajo de 1,1" y todo tiene que
+    # apretarse: circulo menor, menos aire y cuerpo mas pequeno.
+    compacta = n == 3
 
     if unicos:
         # Dos pagos unicos van en fila, y una fila necesita mas ancho que la
@@ -2949,25 +2978,14 @@ def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
         uw = int(Inches(4.1 if len(unicos) == 1 else 4.9))
         rx = int(MARGIN) + uw + int(Inches(0.45))
         rw = int(T.SLIDE_W) - int(MARGIN) - rx
-        _etiqueta(int(MARGIN), uw, label_unico)
-        zona = bottom - cards_y
-        if len(unicos) == 1:
-            _addon_hero(slide, int(MARGIN), cards_y, uw, zona, unicos[0],
-                        _fmt_eur(unicos[0]["price"]))
-        else:
-            ch = (zona - gap) // 2
-            for i, it in enumerate(unicos):
-                _addon_fila(slide, int(MARGIN), cards_y + i * (ch + gap), uw, ch,
-                            it, _fmt_eur(it["price"]))
     else:
+        uw = 0
         rx, rw = int(MARGIN), int(CONTENT_W)
 
-    _etiqueta(rx, rw, label_recurrente)
-    n = len(recurrentes)
-    zona = bottom - cards_y
-    r_gap = int(Inches(0.24)) if n == 3 else gap
-    ch = (zona - r_gap * (n - 1)) // n
-    for i, it in enumerate(recurrentes):
+    # El anual se pega a la descripcion ANTES de medir: si no, la tarjeta se
+    # dimensionaria con un texto que no es el que luego se pinta.
+    items_r = []
+    for it in recurrentes:
         item = dict(it)
         if anual_texto:
             # En centimos, no en float: 35 EUR/mes x 12 son 420 EUR exactos, y no
@@ -2975,8 +2993,49 @@ def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
             # puede contradecirlo.
             anual = anual_texto % _fmt_eur_centimos(_centimos(it["price"]) * 12)
             item["desc"] = (item.get("desc", "").rstrip() + " " + anual).strip()
-        _addon_fila(slide, rx, cards_y + i * (ch + r_gap), rw, ch, item,
-                    "%s/mes" % _fmt_eur(it["price"]))
+        items_r.append(item)
+
+    # Cuanto alto PIDE cada columna. Antes las tarjetas se estiraban hasta el
+    # borde inferior pasase lo que pasase, asi que dos servicios cortos se comian
+    # 3,7" de slide y el aire sobrante se leia como un hueco enorme entre ellas.
+    # Ahora manda el contenido: la columna mas alta fija el alto del bloque y la
+    # otra se ajusta a el, de modo que las dos TERMINAN en la misma linea.
+    alto_r = (sum(_addon_geom(it, rw, compacta)["alto"] for it in items_r)
+              + gap * (n - 1))
+    if len(unicos) == 1:
+        alto_u = _addon_hero_geom(unicos[0], uw)["alto"]
+    elif unicos:
+        alto_u = sum(_addon_geom(it, uw)["alto"] for it in unicos) + gap
+    else:
+        alto_u = 0
+
+    # El bloque se centra en la zona: lo que sobra no se reparte entre las
+    # tarjetas, se deja como margen arriba y abajo.
+    alto = min(zona_h, max(alto_r, alto_u))
+    cards_y = zona_y + (zona_h - alto) // 2
+    lbl_y = cards_y - g_lbl - lbl_h
+
+    def _etiqueta(x, w, txt):
+        _text(slide, Emu(x), Emu(lbl_y), Emu(w), Emu(lbl_h),
+              [[(txt.upper(), {"size": Pt(10), "bold": True, "color": T.AZUL,
+                               "font": T.FONT_MONO, "spacing": 140})]])
+
+    if unicos:
+        _etiqueta(int(MARGIN), uw, label_unico)
+        if len(unicos) == 1:
+            _addon_hero(slide, int(MARGIN), cards_y, uw, alto, unicos[0],
+                        _fmt_eur(unicos[0]["price"]))
+        else:
+            ch = (alto - gap) // 2
+            for i, it in enumerate(unicos):
+                _addon_fila(slide, int(MARGIN), cards_y + i * (ch + gap), uw, ch,
+                            it, _fmt_eur(it["price"]))
+
+    _etiqueta(rx, rw, label_recurrente)
+    ch = (alto - gap * (n - 1)) // n
+    for i, item in enumerate(items_r):
+        _addon_fila(slide, rx, cards_y + i * (ch + gap), rw, ch, item,
+                    "%s/mes" % _fmt_eur(item["price"]), compacta=compacta)
 
     if note:
         _text(slide, MARGIN, Emu(bottom + int(Inches(0.28))), CONTENT_W,

@@ -449,6 +449,38 @@ def build(prs):
         page=n(), section="EXTRAS",
     )
 
+    # 23bb) COMPLEMENTOS: pago unico + recurrentes, con el anual derivado del mes.
+    # La tarjeta alta de la izquierda fija la linea de base y las de la derecha
+    # se ajustan a ella: por eso conviene verlo con TRES recurrentes, que es el
+    # reparto mas apretado que admite el layout.
+    s.add_addons(
+        prs,
+        "Complementos a tu *medida*",
+        [
+            {"name": "Hosting - WordPress optimizado", "price": 35,
+             "desc": "Alojamiento gestionado y optimizado para WordPress.",
+             "icon": T.ICON["server"]},
+            {"name": "Soporte y mantenimiento", "price": 35,
+             "desc": "Actualizaciones, copias de seguridad y soporte continuo "
+                     "del sitio.",
+             "icon": T.ICON["wrench"]},
+            {"name": "Posicionamiento SEO", "price": 90,
+             "desc": "Trabajo continuo de contenidos y posicionamiento en "
+                     "buscadores.",
+             "icon": T.ICON["globe"]},
+        ],
+        unicos=[
+            {"name": "Llave en mano", "price": 750,
+             "desc": "Entrega de la web lista para publicar: contenidos, "
+                     "configuracion y puesta en marcha por NaranjaTec.",
+             "icon": T.ICON["lock"]},
+        ],
+        subtitle="Opciones y servicios",
+        note="Opciones no incluidas en el total del presupuesto. Todos los "
+             "precios son sin IVA.",
+        page=n(), section="COMPLEMENTOS",
+    )
+
     # 23c) EXTRA DESTACADO: panel de color sobre foto (NUEVO)
     s.add_spotlight(
         prs,
