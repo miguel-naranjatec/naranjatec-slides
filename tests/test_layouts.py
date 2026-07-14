@@ -269,14 +269,22 @@ def test_el_catalogo_cubre_todas_las_imagenes_del_disco():
 
 
 def test_la_advertencia_nunca_calla():
-    # La biblioteca PROPIA no tiene fotografia de producto de ningun sector: son
-    # mockups de web. Mientras siga siendo asi, la funcion tiene algo que decir de
-    # cada sector, y lo dice.
+    # La regla, sea cual sea el estado de la biblioteca: de CADA sector hay algo que
+    # decir, y se dice. Con stock, que es generico y que las fotos del cliente son
+    # mejores. Sin stock, que lo que hay son mockups de la web de OTRO cliente.
+    #
+    # (Este test afirmaba antes que ningun sector tenia fotografia de producto. Dejo
+    # de ser verdad el dia que entraron 44 fotos de Burst, y fallo. Justo para eso
+    # estaba: para que el catalogo no pudiera mentir en silencio.)
     IM = _imagenes()
     for s in IM.sectores():
-        assert IM.fotos_de_producto(s) == [], s
         aviso = IM.advertencia(s)
-        assert aviso and "mockup" in aviso.lower(), s
+        assert aviso, s
+        if IM.fotos_de_producto(s):
+            assert "STOCK" in aviso, s
+            assert "fotos SUYAS" in aviso, s
+        else:
+            assert "mockup" in aviso.lower(), s
 
 
 def _con_stock(tmp_path, monkeypatch, **campos):
@@ -329,8 +337,11 @@ def test_buscar_filtra_por_sector_y_tipo():
     IM = _imagenes()
     assert "importaco-macbookpro.jpg" in IM.buscar(sector="alimentacion")
     assert IM.buscar(sector="alimentacion", tipo="logo") == []
-    assert all("vielong" in r for r in IM.buscar(sector="cosmetica"))
     assert IM.buscar(sector="sector-que-no-existe") == []
+    # Cosmetica son las brochas de Vielong... y ahora tambien fotos de stock. Lo
+    # que sigue siendo cierto es que ninguna es de otro cliente.
+    cosmetica = IM.buscar(sector="cosmetica")
+    assert all("vielong" in r or r.startswith("stock/") for r in cosmetica)
 
 
 # --- diapositivas fijas (content/fijas.py) ---------------------------------
