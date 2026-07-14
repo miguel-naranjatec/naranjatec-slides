@@ -2788,7 +2788,9 @@ def add_blocks_grid(prs, title, blocks, subtitle="", page=None, section=""):
     return slides
 
 
-ADDON_GAP = int(Inches(0.26))       # el MISMO aire entre columnas y entre filas
+# El MISMO aire en todas partes: entre columnas, entre tarjetas y entre cada
+# etiqueta y su primera tarjeta.
+ADDON_GAP = int(Inches(0.20))
 ADDON_RADIO = int(Inches(0.14))     # el MISMO redondeo en todas las tarjetas
 
 
@@ -3000,13 +3002,13 @@ def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
         top += int(Inches(0.34))
 
     bottom = int(Inches(6.35))
-    lbl_h = int(Inches(0.3))
-    g_lbl = int(Inches(0.16))
-    zona_y = top + lbl_h + g_lbl
-    zona_h = bottom - zona_y
-    # Un unico aire para todo: entre columnas y entre tarjetas. Antes el
-    # horizontal era 0,45" y el vertical 0,24", y la rejilla no cuadraba.
     gap = ADDON_GAP
+    # La caja de la etiqueta, AJUSTADA a su texto (10pt a interlineado 1,05). Con
+    # los 0,30" de antes sobraba relleno dentro de la caja que se sumaba al hueco:
+    # el aire real hasta la tarjeta era 0,31" y no los 0,16" que decia el codigo.
+    lbl_h = int(round(1.05 * 10 * 12700))
+    zona_y = top + lbl_h + gap
+    zona_h = bottom - zona_y
 
     n = len(recurrentes)
     # Con tres servicios cada tarjeta se queda por debajo de 1,1" y todo tiene que
@@ -3066,7 +3068,7 @@ def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
     # tarjetas, se deja como margen arriba y abajo.
     alto = min(zona_h, max(alto_r, alto_u))
     cards_y = zona_y + (zona_h - alto) // 2
-    lbl_y = cards_y - g_lbl - lbl_h
+    lbl_y = cards_y - gap - lbl_h
 
     def _etiqueta(x, w, txt):
         _text(slide, Emu(x), Emu(lbl_y), Emu(w), Emu(lbl_h),

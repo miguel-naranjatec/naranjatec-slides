@@ -478,6 +478,30 @@ def test_addons_todas_las_tarjetas_con_el_mismo_redondeo(rec, uni):
 
 
 @pytest.mark.parametrize("rec,uni", _COMBIS)
+def test_addons_la_etiqueta_respira_lo_mismo_que_las_tarjetas(rec, uni):
+    # El hueco entre "PAGO UNICO" y su tarjeta (y el de "SERVICIOS RECURRENTES"
+    # con la suya) es el MISMO aire que hay entre tarjetas. Ojo: la caja de la
+    # etiqueta tiene que ir ajustada a su texto; con una caja mas alta que el
+    # texto, el relleno sobrante se suma al hueco y el aire real no es el que
+    # dice el codigo (era 0,31" con un gap escrito de 0,16").
+    slide = _addons_slide(rec, uni)
+    tarjetas = _tarjetas(slide)
+    etiquetas = [sh for sh in slide.shapes
+                 if sh.has_text_frame
+                 and sh.text_frame.text.isupper()
+                 and sh.text_frame.text.strip()
+                 and any(t.left == sh.left for t in tarjetas)]
+    assert len(etiquetas) == (2 if uni else 1)
+    for e in etiquetas:
+        primera = min((t for t in tarjetas if t.left == e.left),
+                      key=lambda t: t.top)
+        aire = primera.top - (e.top + e.height)
+        assert aire == s.ADDON_GAP, (
+            "'%s' respira %.3f in hasta su tarjeta, y entre tarjetas hay %.3f in"
+            % (e.text_frame.text, aire / 914400.0, s.ADDON_GAP / 914400.0))
+
+
+@pytest.mark.parametrize("rec,uni", _COMBIS)
 def test_addons_el_aire_horizontal_es_el_mismo_que_el_vertical(rec, uni):
     # Antes: 0,45" entre columnas y 0,24" entre filas. La rejilla no cuadraba.
     tarjetas = _tarjetas(_addons_slide(rec, uni))
