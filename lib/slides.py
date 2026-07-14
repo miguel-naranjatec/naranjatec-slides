@@ -2990,13 +2990,8 @@ def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
             "add_addons: %d pagos unicos; admite 0, 1 o 2." % len(unicos))
 
     slide = _slide(prs)
-    # FONDO: el isotipo hexagonal, girado y difuminado, sangrando por dos esquinas
-    # opuestas. Va lo primero, asi que queda detras de las tarjetas (que son
-    # blancas opacas): solo asoma por los margenes, que es de lo que se trata.
-    _decor(slide, Inches(10.4), Inches(-3.0), Inches(6.2), rotation=16,
-           alpha=9000)
-    _decor(slide, Inches(-2.8), Inches(4.7), Inches(5.6), rotation=-22,
-           alpha=7000)
+    # Sin adornos: ni isotipo al fondo ni panal en primer plano. Las tarjetas y sus
+    # importes llenan la diapositiva; cualquier forma encima solo hace ruido.
     _topbar(slide, section)
     tb = _title(slide, title, y=Inches(1.05))
     top = max(int(Inches(2.0)), int(tb) + int(Inches(0.28)))
@@ -3098,18 +3093,6 @@ def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
     for i, item in enumerate(items_r):
         _addon_fila(slide, rx, cards_y + i * (ch + gap), rw, ch, item,
                     "%s/mes" % _fmt_eur(item["price"]), compacta=compacta)
-
-    # PRIMER PLANO: el panal de marca, DESPUES de las tarjetas, mordiendo la
-    # esquina superior derecha de la primera y sangrando por el canto de la
-    # diapositiva. Anclado a la esquina se lee como profundidad; suelto en el aire
-    # de arriba a la derecha se leia como una forma puesta ahi sin razon.
-    #
-    # Por que TAN pegado al borde: la pastilla del importe nunca llega al filo de
-    # la tarjeta (pad + pw la dejan a 12,43" como mucho), asi que esa ultima franja
-    # de blanco esta libre en las cuatro combinaciones del layout. Mas a la
-    # izquierda, con tres recurrentes -tarjetas mas bajas, pastilla mas arriba- el
-    # hexagono naranja se comia la esquina del importe.
-    _hex_motif(slide, int(T.SLIDE_W) - int(Inches(0.42)), cards_y, Inches(0.44))
 
     if note:
         _text(slide, MARGIN, Emu(bottom + int(Inches(0.28))), CONTENT_W,
