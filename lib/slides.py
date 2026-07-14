@@ -2990,8 +2990,10 @@ def add_addons(prs, title, recurrentes, unicos=(), subtitle="", note="",
             "add_addons: %d pagos unicos; admite 0, 1 o 2." % len(unicos))
 
     slide = _slide(prs)
-    # Sin adornos: ni isotipo al fondo ni panal en primer plano. Las tarjetas y sus
-    # importes llenan la diapositiva; cualquier forma encima solo hace ruido.
+    # Decoracion de marca: isotipo grande, girado y difuminado en la esquina. La
+    # MISMA que `add_index`, con sus mismas medidas: una sola forma, grande y al
+    # 14%. Dos formas pequenas al 7-9% no se leen, solo ensucian.
+    _decor(slide, Inches(9.6), Inches(-2.3), Inches(7.2), rotation=14)
     _topbar(slide, section)
     tb = _title(slide, title, y=Inches(1.05))
     top = max(int(Inches(2.0)), int(tb) + int(Inches(0.28)))
