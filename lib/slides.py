@@ -474,14 +474,19 @@ def _gradient_overlay(slide, color=None, a0=94000, a1=46000, ang=0):
     return sp
 
 
-def _topbar(slide, section=""):
-    """Barra superior discreta: logo y etiqueta de seccion con tracking."""
+def _topbar(slide, section="", color=None):
+    """Barra superior discreta: logo y etiqueta de seccion con tracking.
+
+    `color`: el gris de siempre sobre fondo claro. Los layouts que meten una FOTO
+    debajo de la etiqueta tienen que pasar blanco (y velar la foto): el gris se
+    come una imagen clara y la etiqueta desaparece."""
     _logo(slide, MARGIN, Inches(0.42), Inches(1.5))
     if section:
         lbl_w = Inches(4.0)
         lx = Emu(int(T.SLIDE_W) - int(MARGIN) - int(lbl_w))
         _text(slide, lx, Inches(0.48), lbl_w, Inches(0.34),
-              [[(section.upper(), {"size": Pt(10.5), "color": T.GRIS_SUAVE,
+              [[(section.upper(), {"size": Pt(10.5),
+                                   "color": color or T.GRIS_SUAVE,
                                    "font": T.FONT_MONO, "spacing": 220})]],
               align=PP_ALIGN.RIGHT, anchor=MSO_ANCHOR.MIDDLE)
 
@@ -2479,10 +2484,18 @@ def add_stats_feature(prs, title, stats, image, subtitle="", page=None,
 
     # Foto a sangre: mitad derecha, de borde a borde.
     img_x = int(Inches(7.75))
-    _img(slide, image, Emu(img_x), 0, Emu(int(T.SLIDE_W) - img_x), T.SLIDE_H,
-         radius=0.0)
+    img_w = int(T.SLIDE_W) - img_x
+    _img(slide, image, Emu(img_x), 0, Emu(img_w), T.SLIDE_H, radius=0.0)
 
-    _topbar(slide, section)
+    # La etiqueta de seccion cae SOBRE la foto (x=8,63" y la foto empieza en 7,75").
+    # En gris, sobre una imagen clara, se borra: con la foto de un cafe la etiqueta
+    # "EL PROBLEMA" se leia a medias. Velo degradado arriba y etiqueta en blanco, y
+    # entonces se lee sea cual sea la foto, oscura o clara.
+    if section:
+        velo = _rect(slide, Emu(img_x), 0, Emu(img_w), Inches(1.5))
+        _grad_fill(velo, T.AZUL_OSCURO, T.AZUL_OSCURO, ang_deg=90,
+                   a1=62000, a2=0)
+    _topbar(slide, section, color=T.BLANCO)
     col_w = img_x - int(MARGIN) - int(Inches(0.6))
     tb = _title(slide, title, y=Inches(1.35), width=Emu(col_w))
     top = max(int(Inches(2.3)), int(tb) + int(GAP_AFTER_TITLE))

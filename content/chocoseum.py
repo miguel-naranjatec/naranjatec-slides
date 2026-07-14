@@ -30,13 +30,24 @@ def build(prs):
         p[0] += 1
         return p[0]
 
+    # Las fotos de stock (brand/assets/img/stock/) sustituyen aqui a los mockups de
+    # otros clientes. No es una cuestion de gusto: en la portada se leia el logo de
+    # SUNFER (estructuras solares), en "Todo para vender" la web de SPRINGVALE
+    # (sofas) y en "La propuesta" las pulseras de Pig&Hen. Ensenarle al cliente la
+    # marca de OTRO cliente es peor que ensenarle una foto generica.
+    #
+    # Donde el mockup SIGUE siendo lo correcto (y por eso no se toca): las
+    # diapositivas que hablan de la web -el techo de la plantilla, la tienda a
+    # medida, las ampliaciones-. Ahi un portatil con una web es justo lo que toca, y
+    # `importaco-macbookpro.jpg` ademas es del sector alimentacion.
+
     # 1) PORTADA
     s.add_cover(
         prs,
         title="La tienda que Chocoseum *merece*",
         subtitle="Quince años, 56 premios y 220.000 clientes. Una tienda a su altura.",
         eyebrow="NaranjaTec - Propuesta",
-        image=T.img("sunfer-mockup.jpg"),
+        image=T.img("stock/alimentacion-tarta-de-queso-con-frutos-rojos.jpg"),
     )
 
     # 2) INDICE
@@ -53,8 +64,10 @@ def build(prs):
     )
 
     # ---------------------------------------------------------------- 01
+    # El trafico que llega y no convierte: un cruce lleno de gente, visto desde
+    # arriba. La metafora es del propio documento, no un adorno.
     s.add_section(prs, "El *problema*", number="01",
-                  image=T.img("abordo-tienda.jpg"))
+                  image=T.img("stock/neutro-cruce-urbano-transitado-visto-desde-arriba.jpg"))
 
     # 3) LA FRASE QUE DUELE. Es el corazon del documento: el ROI sobre trafico
     # que ya se paga. Va sobre foto, a sangre, sin nada que la acompane.
@@ -62,7 +75,7 @@ def build(prs):
         prs,
         "Cada visita que entra por un anuncio y se va sin comprar es *dinero "
         "gastado dos veces*: se pagó por traerla y no dejó nada.",
-        image=T.img("ecco-night.jpg"),
+        image=T.img("stock/neutro-calle-de-ciudad-con-trafico-de-noche.jpg"),
         page=n(),
     )
 
@@ -104,7 +117,10 @@ def build(prs):
             {"value": "4,8", "label": "de valoración media sobre 5",
              "icon": T.ICON["star"]},
         ],
-        image=T.img("springvale-home.jpg"),
+        # 15 años de recorrido ARTESANAL y 56 premios: hace falta una foto que se
+        # vea de oficio. (La de verter masa en una sarten era cocina domestica, con
+        # un jarro de plastico turquesa: se veia amateur al lado de los premios.)
+        image=T.img("stock/alimentacion-cafe-con-leche-y-tarta-de-zanahoria.jpg"),
         subtitle="Argumentos que hoy no trabajan a favor de la marca",
         page=n(), section="El problema",
     )
@@ -189,8 +205,10 @@ def build(prs):
     )
 
     # ---------------------------------------------------------------- 03
+    # Lo que se propone es una TIENDA. Una duena en la suya lo dice mejor que el
+    # lookbook de Pig&Hen, donde ademas se le veian las pulseras al modelo.
     s.add_section(prs, "La *propuesta*", number="03",
-                  image=T.img("pighen-new-lookbook.jpg"))
+                  image=T.img("stock/retail-duena-sonriente-en-su-tienda.jpg"))
 
     # 10) LOS CUATRO PILARES
     s.add_solution(
@@ -236,7 +254,8 @@ def build(prs):
             {"icon": T.ICON["idea"], "head": "Museo y talleres",
              "text": "Una colección gestionable que refuerza la marca."},
         ],
-        image=T.img("pighen-b2b-cart.jpg"),
+        # El final del viaje: el chocolate llega y se disfruta.
+        image=T.img("stock/alimentacion-pareja-cogida-de-la-mano-en-cafeteria.jpg"),
         intro="La logística que la marca ya domina, explicada donde frena la "
               "venta: dentro de la ficha.",
         page=n(), section="La propuesta",
