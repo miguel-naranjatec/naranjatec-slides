@@ -354,10 +354,14 @@ def build(prs):
         page=n(), section="La inversión",
     )
 
-    # 17) PROXIMOS PASOS (FIJA)
+    # 17) COMPLEMENTOS (FIJA). Fuera del total: la llave en mano y los dos
+    # recurrentes de casa. El equivalente anual lo calcula add_addons.
+    F.complementos(prs, page=n(), section="La inversión")
+
+    # 18) PROXIMOS PASOS (FIJA)
     F.proximos_pasos(prs, page=n(), section="Siguiente")
 
-    # 18) CIERRE
+    # 19) CIERRE
     s.add_cta(
         prs,
         "Hablemos de tu *tienda*",
