@@ -76,7 +76,6 @@ fuente instalada para verse).
 
 ```
 python build/build.py test       # muestrario: un ejemplo de cada tipo de slide
-python build/build.py nereidas   # deck de cliente (propuesta de web, ejemplo real)
 python build/build.py            # genera TODOS los decks registrados
 python build/build.py --list     # lista los alias disponibles
 ```
@@ -95,7 +94,7 @@ con LibreOffice headless: convierte a PDF y rasteriza una imagen por pagina.
 ```
 python scripts/preview.py --install-fonts   # una vez (Linux/macOS)
 python scripts/preview.py test              # genera el deck y lo previsualiza
-python scripts/preview.py nereidas --dpi 120
+python scripts/preview.py test --dpi 120
 python scripts/preview.py output/Otro.pptx --pdf-only
 ```
 
@@ -118,7 +117,6 @@ brand/assets/blocks/    Esquemas (wireframes) de 106 bloques de pagina: SVG + PN
 lib/slides.py           Libreria de maquetacion (layouts add_* + helpers)
 content/                Contenido de cada deck (datos, no logica)
   muestrario.py         Muestrario con un ejemplo de cada tipo de diapositiva (alias: test)
-  nereidas.py           Deck de cliente real: propuesta de web (alias: nereidas)
 templates/              Plantillas de arranque (NO registradas en DECKS por defecto)
 build/build.py          Generador: compone contenido + maquetacion y guarda el .pptx
 scripts/preview.py      Previsualizacion sin PowerPoint (LibreOffice headless -> PNG)
@@ -167,18 +165,19 @@ Playfair italica.
 
 ## Crear un deck nuevo
 
-1. Crea `content/mi_deck.py` con `OUTFILE` y una funcion `build(prs)` (copia
-   `content/nereidas.py` como referencia).
+1. Crea `content/mi_deck.py` con `OUTFILE` y una funcion `build(prs)` (mira
+   `content/muestrario.py` para la estructura y las firmas de los layouts).
 2. Anade su alias en el diccionario `DECKS` de `build/build.py`.
-3. Genera con `python build/build.py mi_deck`.
+3. Genera con `python build/build.py mi_deck`. Un deck con datos reales de cliente
+   NO se commitea: el repo es publico.
 
 ## Trabajar con IA (Claude Cowork)
 
 La forma mas rapida de montar un deck es conversando con el asistente: dale el
 documento o brief (p.ej. un `.md` de propuesta), pide "monta un deck de NaranjaTec
 con esto" y revisa el resultado. El asistente escribe el modulo de `content/` por
-ti siguiendo las convenciones de [`CLAUDE.md`](CLAUDE.md). `content/nereidas.py` es
-un ejemplo de un documento de propuesta convertido en presentacion.
+ti siguiendo las convenciones de [`CLAUDE.md`](CLAUDE.md). El deck resultante, si
+lleva datos reales de cliente, se queda en tu maquina: no se sube al repo publico.
 
 ## Marca (resumen)
 

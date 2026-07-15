@@ -6,7 +6,7 @@ cada pagina a PNG para poder revisarlas una a una.
 
 Uso:
     python scripts/preview.py test              # genera el deck y lo previsualiza
-    python scripts/preview.py nereidas --dpi 120
+    python scripts/preview.py test --dpi 120
     python scripts/preview.py output/Otro.pptx  # previsualiza un .pptx existente
     python scripts/preview.py --install-fonts   # instala las fuentes de marca
 
@@ -161,7 +161,7 @@ def main(argv):
     ap = argparse.ArgumentParser(
         description="Previsualiza un deck con LibreOffice headless.")
     ap.add_argument("target", nargs="?",
-                    help="alias de DECKS (test, nereidas) o ruta a un .pptx")
+                    help="alias de DECKS (test) o ruta a un .pptx")
     ap.add_argument("--dpi", type=int, default=110,
                     help="resolucion de los PNG (por defecto 110)")
     ap.add_argument("--pdf-only", action="store_true",

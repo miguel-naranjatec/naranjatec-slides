@@ -12,8 +12,10 @@ en el repo, lee [`CLAUDE.md`](CLAUDE.md).
 
 Que se publica con el repo, y conviene tener presente: las capturas de proyectos
 de cliente de `brand/assets/img/`, la carpeta `avatars/` con fotos de personas
-reales, 18 fotos de la oficina, y la propuesta comercial de
-`content/nereidas.py` (sin cifras economicas). No hay credenciales ni secretos.
+reales y 18 fotos de la oficina. No hay credenciales ni secretos, y NO se publica
+ningun deck de cliente: solo el muestrario de disenos (`content/muestrario.py`).
+Los decks con datos reales (presupuestos, tarifas, nombres) se generan fuera del
+repo y su `.pptx` no se versiona (`output/` esta ignorado).
 
 Las 4 familias tipograficas son OFL y Material Symbols es Apache-2.0:
 redistribuirlas dentro del repo es legitimo. La fuente de iconos es una instancia
@@ -116,8 +118,8 @@ retiraron del historial antes del primer push; el repo son ~78 MB.
 
 **Anadir un deck.** Crear `content/mi_deck.py` con `OUTFILE` y `build(prs)`,
 registrar el alias en el dict `DECKS` de `build/build.py`, generar con
-`python build/build.py mi_deck`. `content/nereidas.py` es el ejemplo canonico de
-"documento de propuesta -> deck".
+`python build/build.py mi_deck`. `content/muestrario.py` es la referencia de
+layouts. Un deck de cliente con datos reales NO se commitea: el repo es publico.
 
 **Codificacion.** El codigo, los comentarios y el deck de test van en ASCII
 puro. Los decks de cliente llevan acentos y ene reales, porque son entregables.

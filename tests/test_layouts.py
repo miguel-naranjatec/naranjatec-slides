@@ -125,6 +125,38 @@ def test_check_box_lanza_con_medidas_no_positivas():
         s._check_box(0, s.Inches(1), "prueba")
 
 
+# --- add_stats_mosaic -----------------------------------------------------
+
+def _cifra(v="1257"):
+    return {"value": v, "label": "una etiqueta corta"}
+
+
+def test_add_stats_mosaic_admite_de_dos_a_seis():
+    for n in (2, 3, 4, 5, 6):
+        slide = s.add_stats_mosaic(_prs(), "Cifras", [_cifra()] * n, _imgs())
+        assert slide is not None
+
+
+def test_add_stats_mosaic_fuera_de_rango_lanza():
+    for n in (1, 7):
+        with pytest.raises(ValueError, match="entre 2 y 6"):
+            s.add_stats_mosaic(_prs(), "Cifras", [_cifra()] * n, _imgs())
+
+
+def test_add_stats_mosaic_sin_imagenes_lanza():
+    with pytest.raises(ValueError, match="al menos una imagen"):
+        s.add_stats_mosaic(_prs(), "Cifras", [_cifra()] * 3, [])
+
+
+def test_add_stats_mosaic_sin_titulo_no_rompe_cajas():
+    # Sin titulo el mosaico sube; con subtitulo y sin titulo el subtitulo se
+    # ignora. Ninguna caja puede salir con medida no positiva.
+    slide = s.add_stats_mosaic(_prs(), "", [_cifra()] * 5, _imgs())
+    for sp in slide.shapes:
+        assert int(sp.height) > 0
+        assert int(sp.width) > 0
+
+
 # --- add_next_steps -------------------------------------------------------
 
 def _paso():

@@ -2554,6 +2554,109 @@ def add_stats_feature(prs, title, stats, image, subtitle="", page=None,
     return slide
 
 
+# Banda inferior de cifras de add_stats_mosaic.
+_MOSAIC_BAND_H = Inches(1.75)
+
+
+def add_stats_mosaic(prs, title, stats, images, subtitle="", page=None,
+                     section=""):
+    """Cifras sobre un mosaico: arriba, un mosaico asimetrico de 5 fotos (una
+    grande a la izquierda + dos columnas de dos, con cortes desiguales para que
+    respire); abajo, a sangre, una banda azul marino con las cifras separadas
+    por finos filos verticales.
+
+    stats: [{"value": "1257", "label": "usuarios"}]. De 2 a 6. La cifra va en
+    blanco y grande, con un acento dorado bajo ella y la etiqueta debajo.
+    images: rutas; usa las 5 primeras (si hay menos, repite la ultima). `title`
+    y `subtitle` son opcionales: sin titulo, el mosaico sube casi hasta la barra.
+
+    Es el primo con foto de `add_stats` (banda sobria) y `add_stats_feature`
+    (rejilla + foto lateral): aqui la foto es un mosaico y la cifra vive en la
+    banda, no en tarjetas.
+    """
+    if not 2 <= len(stats) <= 6:
+        raise ValueError(
+            "add_stats_mosaic: %d cifras; admite entre 2 y 6." % len(stats))
+    if not images:
+        raise ValueError("add_stats_mosaic: hace falta al menos una imagen.")
+
+    slide = _slide(prs)
+    _topbar(slide, section)
+
+    # Titulo y subtitulo, ambos opcionales. Sin titulo, el mosaico empieza justo
+    # bajo la barra superior (como la referencia, que no lleva titulo).
+    tb = _title(slide, title, y=Inches(1.15)) if title else None
+    mosaic_top = int(Inches(1.05))
+    if tb is not None:
+        mosaic_top = int(tb) + int(Inches(0.24))
+        if subtitle:
+            _text(slide, MARGIN, Emu(int(tb) + int(Inches(0.1))), Inches(9.0),
+                  Inches(0.5),
+                  [[(subtitle, {"size": Pt(14), "italic": True,
+                                "color": T.GRIS_SUAVE,
+                                "font": T.FONT_TITLE_EMPH})]])
+            mosaic_top += int(Inches(0.42))
+
+    band_top = int(T.SLIDE_H) - int(_MOSAIC_BAND_H)
+    mosaic_bot = band_top - int(Inches(0.28))
+    mosaic_h = mosaic_bot - mosaic_top
+    _check_box(CONTENT_W, Emu(mosaic_h), "add_stats_mosaic (mosaico)")
+
+    # Mosaico asimetrico de 5 fotos: 1 grande izq + 2 columnas de 2 con cortes
+    # distintos (56/44 y 44/56) para que no parezca una rejilla.
+    gap = int(Inches(0.08))
+    left_w = int(Inches(4.55))
+    col_w = (int(CONTENT_W) - left_w - 2 * gap) // 2
+    imgs = (list(images) + [images[-1]] * 5)[:5]
+    ax = int(MARGIN)
+    _img(slide, imgs[0], Emu(ax), Emu(mosaic_top), Emu(left_w), Emu(mosaic_h),
+         radius=0.02)
+    topB = int((mosaic_h - gap) * 0.56)
+    botB = mosaic_h - gap - topB
+    bx = ax + left_w + gap
+    _img(slide, imgs[1], Emu(bx), Emu(mosaic_top), Emu(col_w), Emu(topB),
+         radius=0.02)
+    _img(slide, imgs[2], Emu(bx), Emu(mosaic_top + topB + gap), Emu(col_w),
+         Emu(botB), radius=0.02)
+    topC = int((mosaic_h - gap) * 0.44)
+    botC = mosaic_h - gap - topC
+    cx = bx + col_w + gap
+    _img(slide, imgs[3], Emu(cx), Emu(mosaic_top), Emu(col_w), Emu(topC),
+         radius=0.02)
+    _img(slide, imgs[4], Emu(cx), Emu(mosaic_top + topC + gap), Emu(col_w),
+         Emu(botC), radius=0.02)
+
+    # Banda de cifras a sangre, azul marino. Las cifras se reparten el ancho util
+    # y se separan con finos filos blancos translucidos.
+    _rect(slide, 0, Emu(band_top), T.SLIDE_W, _MOSAIC_BAND_H, fill=T.AZUL_OSCURO)
+    n = len(stats)
+    cell_w = int(CONTENT_W) // n
+    div_h = int(int(_MOSAIC_BAND_H) * 0.5)
+    div_y = band_top + (int(_MOSAIC_BAND_H) - div_h) // 2
+    for i, st in enumerate(stats):
+        x = int(MARGIN) + i * cell_w
+        if i > 0:
+            _tint(slide, Emu(x - gap // 2), Emu(div_y), Pt(1.1), Emu(div_h),
+                  color=T.BLANCO, alpha=20000)
+        _text(slide, Emu(x), Emu(band_top + int(Inches(0.30))), Emu(cell_w),
+              Inches(0.62),
+              [[(st["value"], {"size": Pt(30), "bold": True, "color": T.BLANCO,
+                               "font": T.FONT_NUM})]], align=PP_ALIGN.CENTER)
+        aw = int(Inches(0.42))
+        _rect(slide, Emu(x + (cell_w - aw) // 2),
+              Emu(band_top + int(Inches(0.96))), Emu(aw), Pt(2.5),
+              fill=T.AMARILLO)
+        _text(slide, Emu(x), Emu(band_top + int(Inches(1.14))), Emu(cell_w),
+              Inches(0.5),
+              [[(st["label"], {"size": Pt(11.5), "color": T.GRIS_BORDE,
+                               "font": T.FONT_BODY})]], align=PP_ALIGN.CENTER,
+              line_spacing=1.15)
+
+    # El numero de pagina cae sobre la banda navy: en blanco.
+    _white_pagenum(slide, page)
+    return slide
+
+
 def _arc_band(slide, cx, cy, rx, ry, thick, arriba, color, t0=0.0, pasos=48):
     """Arco grueso (media luna) dibujado como forma libre.
 

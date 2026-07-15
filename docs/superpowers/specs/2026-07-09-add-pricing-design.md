@@ -6,7 +6,7 @@ Estado: aprobado, pendiente de implementar
 ## Problema
 
 `lib/slides.py` no tiene ningun layout para presentar un presupuesto: partidas con
-importe, total y nota al pie. En `content/nereidas.py` esto ya dolio: el desglose
+importe, total y nota al pie. En un deck de cliente esto ya dolio: el desglose
 de 5 partidas hubo que fusionarlo a 4 para meterlo en `add_bullets`, que pinta
 `bullets[:4]` y descarta el resto en silencio.
 
@@ -19,7 +19,7 @@ a la derecha, sobre fondo oscuro, con una nota al pie en cursiva.
 Un solo layout nuevo, `add_pricing`, en `lib/slides.py`. Sin cambios en
 `brand/theme.py`. Una diapositiva de ejemplo en `content/muestrario.py`.
 
-Fuera de alcance: rehacer el desglose de `content/nereidas.py` (se hara despues,
+Fuera de alcance: rehacer el desglose del deck de cliente (se hara despues,
 como cambio de contenido aparte).
 
 ## API

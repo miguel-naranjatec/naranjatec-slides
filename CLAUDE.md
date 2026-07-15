@@ -16,8 +16,10 @@ python build/build.py           # genera todos los decks registrados
 python build/build.py --list    # lista alias disponibles
 ```
 
-Alias registrados en `DECKS` (`build/build.py`): `test` (muestrario de todos los
-layouts) y `nereidas` (deck de cliente real, ejemplo canonico). Requisitos:
+Alias registrados en `DECKS` (`build/build.py`): solo `test` (muestrario de todos
+los layouts). Los decks de CLIENTE no viven en este repo publico: se generan a
+partir del documento del cliente donde este, y su `.pptx` con datos reales no se
+versiona. El muestrario es la referencia de layouts. Requisitos:
 `pip install -r requirements.txt` (solo `python-pptx` + `Pillow`).
 
 ## Arquitectura (3 capas)
@@ -130,6 +132,14 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
   descripcion) izq y foto a sangre en la mitad dcha. `stats`:
   `{"value","label","icon"}`, de 2 a 4. Version rica de `add_stats`, que sigue
   existiendo para la banda de cifras sin foto.
+- `add_stats_mosaic(prs, title, stats, images, subtitle="", page, section)`
+  Cifras sobre foto: mosaico asimetrico de 5 imagenes arriba (una grande izq +
+  dos columnas de dos con cortes desiguales) y banda navy a sangre abajo con las
+  cifras separadas por finos filos verticales (cifra blanca + acento dorado +
+  etiqueta). `stats`: `{"value","label"}`, de 2 a 6. `title`/`subtitle`
+  OPCIONALES (sin titulo el mosaico sube hasta la barra). `images`: usa las 5
+  primeras (repite la ultima si hay menos); sin ninguna -> `ValueError`. Es el
+  primo con foto de `add_stats` (banda sobria) y `add_stats_feature` (rejilla).
 - `add_extras(prs, title, extras, subtitle="", page, section)`
   Productos adicionales: 2-4 tarjetas altas con foto + velo navy, icono, precio
   grande (con `+` delante), nombre y descripcion corta. `extras`:
@@ -191,9 +201,9 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
 
 - **Codigo, comentarios y el deck de TEST (`content/muestrario.py`): ASCII puro.**
   Sin acentos, sin ene, sin BOM, sin comillas tipograficas ni guiones em/en.
-- **Decks de CLIENTE (p.ej. `content/nereidas.py`): acentos y ene REALES** (UTF-8
+- **Decks de CLIENTE (los que generes en `content/`): acentos y ene REALES** (UTF-8
   sin BOM, comillas rectas `"` `'`, guiones normales `-`). Es un entregable: el
-  espanol debe estar bien escrito.
+  espanol debe estar bien escrito. Ese deck NO se commitea al repo publico.
 - Glifos de icono / PUA (rango U+E000-U+F8FF) SIEMPRE como escape `\uXXXX` en el
   codigo, NUNCA el caracter literal (rompe el ASCII y se manglea al editar). Ej.:
   estrella rellena = `"\uE735"`.
@@ -248,10 +258,11 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
 
 ## Crear un deck nuevo
 
-1. Crea `content/mi_deck.py` con `OUTFILE` y `build(prs)` (copia `content/nereidas.py`
-   como referencia).
+1. Crea `content/mi_deck.py` con `OUTFILE` y `build(prs)` (mira `content/muestrario.py`
+   para la estructura y las firmas de los layouts).
 2. Registra el alias en el dict `DECKS` de `build/build.py`.
-3. Genera con `python build/build.py mi_deck`.
+3. Genera con `python build/build.py mi_deck`. Si el deck lleva datos reales de
+   cliente, NO lo commitees: el repo es publico.
 
 ## Flujo "documento -> deck" (para decks de cliente)
 
@@ -265,7 +276,7 @@ resumen:
    presupuesto -> proximos pasos**, y entregar ese juicio (cubierto / flojo /
    ausente por acto) ANTES de escribir codigo.
 3. Elegir los layouts por la FORMA del contenido, no por su titulo, buscando
-   variedad. No hay guion fijo: `content/nereidas.py` es un ejemplo, no la plantilla.
+   variedad. No hay guion fijo ni plantilla: el arco lo dicta cada documento.
 4. UNA sola ronda de preguntas, antes de generar nada: (a) que diapositivas FIJAS
    se incluyen (checkbox; `python content/fijas.py --list`); (b) idioma, por
    defecto el del documento; (c) tono, ofreciendo 2-3 deducidos del documento y

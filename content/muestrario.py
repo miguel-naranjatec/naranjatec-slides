@@ -170,7 +170,7 @@ def build(prs):
         section="Ejemplo",
     )
 
-    # 11b) CIFRAS en banda (add_stats, la version sin foto que usa Nereidas)
+    # 11b) CIFRAS en banda (add_stats, la version sobria sin foto)
     s.add_stats(
         prs,
         [
@@ -180,6 +180,44 @@ def build(prs):
         ],
         title="Cifras en banda",
         subtitle="Version sobria, sin foto",
+        page=n(),
+        section="Ejemplo",
+    )
+
+    # 11c) CIFRAS SOBRE MOSAICO (galeria de ejemplos del layout nuevo)
+    _MOSAICO_FOTOS = [
+        T.img("stock/neutro-arquitectura-geometrica-triangular.jpg"),
+        T.img("stock/neutro-canal-iluminado-de-ciudad-europea-de-noche.jpg"),
+        T.img("stock/neutro-pasarela-de-madera-junto-al-mar.jpg"),
+        T.img("stock/neutro-nubes-vistas-desde-ventanilla-de-avion.jpg"),
+        T.img("stock/neutro-skyline-de-chicago-iluminado-de-noche.jpg"),
+    ]
+    # Ejemplo A: con titulo y 3 cifras.
+    s.add_stats_mosaic(
+        prs,
+        "Cifras sobre *mosaico*",
+        [
+            {"value": "+22", "label": "anos de experiencia"},
+            {"value": "+350", "label": "proyectos entregados"},
+            {"value": "98%", "label": "clientes que renuevan"},
+        ],
+        images=_MOSAICO_FOTOS,
+        subtitle="Mosaico de fotos arriba, banda de cifras abajo",
+        page=n(),
+        section="Ejemplo",
+    )
+    # Ejemplo B: sin titulo y 5 cifras (como la referencia).
+    s.add_stats_mosaic(
+        prs,
+        "",
+        [
+            {"value": "1257", "label": "usuarios"},
+            {"value": "1000", "label": "descargas"},
+            {"value": "34k", "label": "me gusta"},
+            {"value": "567", "label": "5 estrellas"},
+            {"value": "100%", "label": "recomendado"},
+        ],
+        images=_MOSAICO_FOTOS,
         page=n(),
         section="Ejemplo",
     )

@@ -17,6 +17,10 @@ venv/
 env/
 *.egg-info/
 
+# Logs locales del plugin remember: pueden llevar datos reales de cliente
+# (presupuestos, nombres) de las sesiones. NUNCA al repo publico.
+.remember/
+
 # Temporales / editores / SO
 *.tmp
 *~

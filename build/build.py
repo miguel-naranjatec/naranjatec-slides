@@ -2,7 +2,7 @@
 
 Uso:
     python build/build.py            # genera TODAS las presentaciones
-    python build/build.py ventas     # genera solo el deck comercial
+    python build/build.py test       # genera solo el muestrario de disenos
     python build/build.py --list     # lista los decks disponibles
 
 Cada deck es un modulo de contenido (en content/ o templates/) que expone:
@@ -24,13 +24,11 @@ sys.path.insert(0, str(ROOT))
 import lib.slides as s  # noqa: E402
 
 # Mapa de alias -> modulo de contenido.
-# Deck unico de test de disenos (una diapositiva de cada tipo). Los modulos de
-# contenido reales (ventas, plantillas) se conservan en disco pero no se
-# construyen por defecto mientras iteramos el diseno.
+# Solo se registra el muestrario de disenos (una diapositiva de cada tipo). Los
+# decks de cliente NO viven en este repo publico: se generan a partir del
+# documento del cliente donde este, y su .pptx (con datos reales) no se versiona.
 DECKS = {
     "test": "content.muestrario",
-    "nereidas": "content.nereidas",
-    "chocoseum": "content.chocoseum",
 }
 
 

@@ -54,8 +54,8 @@ Los actos se separan con `add_section` numerado.
 
 ## Paso 3. De contenido a layout
 
-Dentro de cada acto **no hay guion fijo**. `content/nereidas.py` es UN ejemplo, no
-la plantilla. El criterio es la FORMA del contenido, no su titulo:
+Dentro de cada acto **no hay guion fijo** ni plantilla. El criterio es la FORMA
+del contenido, no su titulo:
 
 | Lo que hay en el documento | Layout |
 |---|---|
@@ -65,7 +65,7 @@ la plantilla. El criterio es la FORMA del contenido, no su titulo:
 | Dos mundos enfrentados (antes/despues, ellos/nosotros) | `add_two_column`, `add_comparison` |
 | Secuencia de hasta 4 pasos | `add_process` |
 | Secuencia con fechas | `add_timeline` |
-| Cifras que hablan solas | `add_stats`, `add_stats_feature` |
+| Cifras que hablan solas | `add_stats`, `add_stats_feature`, `add_stats_mosaic` |
 | Un argumento largo con una imagen | `add_image_feature`, `add_mission` |
 | Partidas con importe | `add_pricing` |
 | Ampliaciones opcionales con precio | `add_extras` |
@@ -100,7 +100,7 @@ la forma del contenido.
 ## Paso 4. La ronda de preguntas (una sola, antes de generar nada)
 
 Todo lo que hay que preguntar se pregunta AQUI, junto, con AskUserQuestion. Nunca
-goteando. Son cuatro, y ninguna se salta:
+goteando. Son cinco, y ninguna se salta:
 
 ### 4a. Diapositivas fijas (checkbox)
 
@@ -172,6 +172,24 @@ El tono afecta al copy, no a los layouts.
 
 Ver los pasos 6 y 7. Van en esta misma ronda.
 
+### 4e. Algo a medida
+
+La ultima, y abierta: **quiere anadir algo que el documento no recoge?** Un guion
+derivado del documento cubre lo que el cliente escribio, pero no lo que el usuario
+lleva en la cabeza y no puso por escrito: un mensaje concreto que quiere que suene,
+una slide extra (un caso de exito, una garantia, una comparativa con la competencia),
+un enfasis en una parte de la propuesta, un dato que se le olvido incluir.
+
+No es lo mismo que un hueco (paso 7): el hueco es un dato que el layout pide y falta;
+esto es material que el usuario anade porque quiere, y que sin preguntarlo no
+aparece. Ofrecelo como pregunta abierta, con "nada, tira con lo que hay" marcado por
+defecto: la mayoria de las veces el documento basta, pero cuando no, es aqui donde
+sale, no a mitad de la generacion.
+
+Si lo que pide es una diapositiva que se va a repetir en otros decks, no la metas
+suelta: es candidata a fija (paso 4a). Si es de este deck y ya, va como una slide mas
+del guion.
+
 ## Paso 5. Los bloques de pagina (el acto "propuesta")
 
 Cuando el documento describe una WEB, la propuesta debe ensenar con que bloques se
@@ -220,7 +238,7 @@ a que tarifa se convierten a euros? NUNCA inventarla. Va en la ronda del paso 4.
 
 Y la regla que la acompana: **horas y euros no conviven en el mismo deck**. Si en
 una slide aparecen las horas y en otra los euros, basta dividir para deducir la
-tarifa. Ver `content/nereidas.py:210-212`.
+tarifa. Muestra siempre una sola de las dos, nunca las dos.
 
 El total de `add_pricing` lo suma el layout a partir de las filas, asi que nunca
 puede contradecir al desglose. No lo pases a mano.
