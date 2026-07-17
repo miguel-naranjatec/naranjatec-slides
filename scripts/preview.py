@@ -12,9 +12,10 @@ Uso:
 
 Salida: output/preview/<nombre-del-deck>/pagina-NN.png (y el .pdf intermedio).
 
-IMPORTANTE: sin las fuentes de marca instaladas en ESTA maquina, LibreOffice
-sustituye la tipografia y los iconos salen como cajas. Ejecuta --install-fonts
-una vez antes de la primera previsualizacion.
+Sin las fuentes de marca instaladas en ESTA maquina, LibreOffice sustituye la
+tipografia por otra sans y la previsualizacion sigue siendo util, solo que no es
+fiel. Ejecuta --install-fonts una vez para verla bien. Los iconos se ven igual
+con o sin fuentes: son formas nativas, no texto.
 """
 
 import argparse
@@ -54,16 +55,15 @@ def find_exe(candidates):
 
 
 def brand_font_files():
-    """Los .ttf estaticos de las 4 familias + la fuente de iconos.
+    """Los .ttf estaticos de las 4 familias de TEXTO.
 
     Se ignoran las VariableFont: PowerPoint (y LibreOffice) no seleccionan bien
-    los pesos de una fuente variable. La de iconos ya viene congelada a peso 300
-    por scripts/make_icon_font.py.
+    los pesos de una fuente variable.
+
+    La de iconos (Material_Icons/) NO va aqui a proposito: los iconos son formas
+    nativas, no texto, asi que no hay nada que instalar para que se vean.
     """
-    files = [f for f in FONTS_DIR.glob("*/static/*.ttf")]
-    icons = FONTS_DIR / "Material_Icons"
-    files += list(icons.glob("*.ttf")) + list(icons.glob("*.otf"))
-    return files
+    return list(FONTS_DIR.glob("*/static/*.ttf"))
 
 
 def install_fonts():

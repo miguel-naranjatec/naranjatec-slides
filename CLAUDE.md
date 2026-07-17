@@ -185,12 +185,16 @@ Casi todos aceptan `subtitle=""` (serif Playfair opcional bajo el titulo),
 - Imagenes: `T.img("nombre.jpg")` (relativo a `brand/assets/img/`; lanza error si
   no existe). Fotos de oficina reales en `T.img("oficina/naranjatec_XXXX.jpg")`.
 - Iconos de linea: `T.ICON["cloud"]`, `["shield"]`, `["globe"]`, etc. (ver el dict
-  `ICON` en `brand/theme.py`). Fuente `Material Symbols Outlined 300` (Google,
-  congelada a peso 300 con `scripts/make_icon_font.py`, bundled en
-  `brand/assets/fonts/Material_Icons/`). Las estrellas de valoracion de
-  `add_quote` se dibujan como forma nativa rellena (`MSO_SHAPE.STAR_5_POINT`).
+  `ICON` en `brand/theme.py`). NO son texto: se dibujan como FORMAS NATIVAS
+  (`a:custGeom`) con la geometria de `brand/icon_paths.py`, que
+  `scripts/make_icon_paths.py` extrae del `.ttf` de `Material Symbols Outlined
+  300` en build-time. La fuente NO se instala en ninguna maquina: es la fuente de
+  verdad del dibujo, no una dependencia de quien abre el deck. Las estrellas de
+  `add_quote` van igual, como forma (`MSO_SHAPE.STAR_5_POINT`).
   Para anadir un icono nuevo: buscar su nombre en el `.codepoints`, anadirlo al
-  dict `ICON_NAMES` de `scripts/make_icon_font.py` y regenerar.
+  dict `ICON_NAMES` de `scripts/make_icon_font.py`, regenerar la fuente, pegar el
+  dict `ICON` en `theme.py` y **regenerar la geometria**:
+  `python scripts/make_icon_paths.py` (`--check` avisa si esta desactualizada).
 - Subtitulos serif: pasar `subtitle="..."` (Playfair italica) en los layouts que lo
   aceptan.
 - Numero de pagina: usar un contador `n()` como en los ejemplos; los separadores
@@ -317,6 +321,7 @@ prohibe el scraping en sus terminos, §1.9.)
 
 Amarillo `#FFCD33`, azul `#1099ED`, azul profundo `#0B3D66`, acento naranja
 `#FF9E2C`. Tipografia: titulos Google Sans (enfasis Playfair Display italica),
-cuerpo Instrument Sans, mono/botones Geist Mono, iconos Material Symbols Outlined 300. Fondo
+cuerpo Instrument Sans, mono/botones Geist Mono (los iconos no son una fuente:
+son formas, ver arriba). Fondo
 blanco calido `#FAF9F6`, tarjetas blancas con sombra suave que "flotan". Todo
 centralizado en `brand/theme.py`.

@@ -84,8 +84,8 @@ def proximos_pasos(prs, page=None, section="", pasos=None,
 
 
 # --- Nuestra mision --------------------------------------------------------
-# Copy destilado de content/ventas_comercial.py, que es donde vive el discurso
-# comercial de la casa. `add_mission` pinta 4 features como maximo.
+# Aqui vive el discurso comercial de la casa: este es el copy bueno, el que se
+# reutiliza en las propuestas. `add_mission` pinta 4 features como maximo.
 
 MISION = [
     {"icon": T.ICON["people"], "head": "Un único interlocutor",

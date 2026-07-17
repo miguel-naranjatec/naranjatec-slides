@@ -5,12 +5,17 @@ GRAD, opsz, wght). PowerPoint no sabe elegir una instancia de un eje variable,
 asi que aqui la "congelamos": se fija wght al peso que queremos y se guarda un
 .ttf estatico que si se puede instalar y usar.
 
-La familia resultante se llama "Material Symbols Outlined <peso>" (p.ej.
-"Material Symbols Outlined 300"), NO "Material Symbols Outlined" a secas. Es
-deliberado: si usara el nombre estandar y alguien tuviera ya instalada la fuente
-oficial de Google, PowerPoint cogeria esa (peso 400) y el deck se veria mal sin
-que nadie lo notase. Con un nombre propio, si la fuente falta salen cajas: un
-fallo ruidoso, que se arregla.
+OJO: esta fuente YA NO SE INSTALA en ninguna maquina ni se pide por nombre. Los
+iconos se dibujan como formas nativas a partir de su geometria, que
+scripts/make_icon_paths.py extrae de este .ttf a brand/icon_paths.py. O sea: este
+script produce la FUENTE DE VERDAD del dibujo, y el flujo completo para tocar un
+icono es make_icon_font.py -> make_icon_paths.py.
+
+Por eso el nombre de familia ("Material Symbols Outlined <peso>", no "Material
+Symbols Outlined" a secas) ya no protege de nada: se puso para que, si faltaba la
+fuente, salieran cajas en vez de colarse el peso 400 de Google en silencio. Como
+nadie la resuelve por nombre, es inofensivo y se conserva solo para poder
+instalarla a mano si hace falta depurar un glifo.
 
 Requiere fonttools (solo para construir la fuente, no para generar decks):
 
@@ -22,7 +27,10 @@ Uso:
     python scripts/make_icon_font.py --src ruta/a/MaterialSymbolsOutlined.ttf
 
 Escribe en brand/assets/fonts/Material_Icons/ el .ttf y el .codepoints, e
-imprime el dict ICON listo para pegar en brand/theme.py.
+imprime el dict ICON listo para pegar en brand/theme.py. Despues hay que
+regenerar la geometria:
+
+    python scripts/make_icon_paths.py
 """
 
 import argparse
@@ -109,7 +117,8 @@ def main(argv):
         font, {"wght": args.weight, "FILL": 0, "GRAD": 0, "opsz": 24},
         inplace=True, updateFontNames=False)
 
-    # Nombre de familia propio: ver el docstring (fallo ruidoso > silencioso).
+    # Nombre de familia propio: ya no protege de nada (ver el docstring), pero el
+    # .ttf sigue siendo instalable a mano para depurar.
     ps_name = "MaterialSymbolsOutlined%d-Regular" % args.weight
     name_table = font["name"]
     for nid, value in ((1, family), (2, "Regular"),
@@ -130,7 +139,8 @@ def main(argv):
     out_cps.write_bytes(cps.read_bytes())
     print("[ok] %s" % out_cps.relative_to(ROOT))
 
-    print("\nFONT_ICON = \"%s\"\n" % family)
+    print("\nPega este dict en brand/theme.py y luego regenera la geometria con:")
+    print("    python scripts/make_icon_paths.py\n")
     print("ICON = {")
     items = list(ICON_NAMES)
     for i in range(0, len(items), 4):

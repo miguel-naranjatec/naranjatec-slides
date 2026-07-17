@@ -53,17 +53,26 @@ FONT_NUM = "Google Sans"             # cifras grandes (mismo sans que titulos, c
 FONT_BODY = "Instrument Sans"        # cuerpo (regular)
 FONT_BODY_MED = "Instrument Sans Medium"  # cuerpo con algo mas de peso
 FONT_MONO = "Geist Mono"             # botones/pills y etiquetas con estilo mono
-# Iconos monolinea multiplataforma: Material Symbols Outlined (Google, Apache 2.0),
-# congelada a peso 300 (trazo mas fino que el 400 por defecto). El .ttf estatico
-# esta bundled en brand/assets/fonts/Material_Icons/ y se regenera con
-# scripts/make_icon_font.py. Sustituye a "Segoe Fluent Icons" (solo Windows).
+# Iconos monolinea: Material Symbols Outlined (Google, Apache 2.0), congelada a
+# peso 300 (trazo mas fino que el 400 por defecto). El .ttf estatico esta bundled
+# en brand/assets/fonts/Material_Icons/ y se regenera con scripts/make_icon_font.py.
 #
-# El nombre de familia lleva el peso a proposito: si se llamase "Material Symbols
-# Outlined" a secas y alguien tuviera instalada la fuente oficial de Google,
-# PowerPoint usaria esa (peso 400) en silencio. Asi, si falta, salen cajas.
-FONT_ICON = "Material Symbols Outlined 300"
+# OJO: la fuente NO se instala ni se pide por nombre en ningun sitio. Los iconos
+# se dibujan como formas nativas con la geometria de brand/icon_paths.py, que
+# scripts/make_icon_paths.py extrae de este .ttf en build-time. O sea: el .ttf es
+# la fuente de verdad del DIBUJO, no una dependencia de quien abre el deck.
+#
+# Fue asi por necesidad. Como texto, un icono es un codepoint PUA (U+E000-U+F8FF),
+# y esos codepoints no pertenecen a ningun script: PowerPoint tiene que adivinar a
+# que ranura de fuente enrutarlos (latin / east-asian / complex / symbol) y en
+# PowerPoint for Mac no siempre acierta. Peor: macOS tiene fuentes de sistema que
+# reclaman parte del rango PUA, asi que a veces salia un glifo ajeno y a veces
+# nada, segun el codepoint. Como forma no hay fuente que resolver y se ve igual en
+# PowerPoint (Windows y Mac) y en LibreOffice headless, que es quien exporta el
+# PDF que recibe el cliente. La ruta al .ttf es ICON_TTF, con el resto de assets.
 
-# Glyphs de icono (codepoints PUA de Material Symbols). Centralizados para
+# Glyphs de icono (codepoints PUA de Material Symbols). El codepoint sigue siendo
+# la LLAVE del icono: identifica el glifo dentro del .ttf. Centralizados para
 # reutilizarlos desde el contenido: T.ICON["cloud"], etc. Ver el fichero
 # .codepoints junto al .ttf para el mapa nombre->codigo completo. OJO: los
 # codepoints de Material Symbols NO coinciden con los de Material Icons; el mapa
@@ -93,6 +102,10 @@ _ASSETS = Path(__file__).resolve().parent / "assets"
 LOGO_PATH = _ASSETS / "logo.png"
 LOGO_WHITE_PATH = _ASSETS / "logo-white.png"   # version monocroma blanca (fondos oscuros)
 IMG_DIR = _ASSETS / "img"   # biblioteca de imagenes del proyecto (portable)
+# Fuente de los iconos. NO se instala en ningun sitio: es de donde
+# scripts/make_icon_paths.py saca la geometria de brand/icon_paths.py. Ver el
+# comentario de ICON, mas arriba.
+ICON_TTF = _ASSETS / "fonts" / "Material_Icons" / "MaterialSymbolsOutlined300-Regular.ttf"
 
 
 def img(name):

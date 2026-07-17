@@ -181,11 +181,16 @@ def test_add_next_steps_con_seis_lanza():
 
 def test_add_next_steps_pinta_un_arco_y_una_punta_por_hueco():
     # n pasos -> n-1 arcos (formas libres, custGeom) y n-1 puntas (triangulos).
+    # Los iconos TAMBIEN son custGeom, asi que contar la subcadena en el XML de
+    # la diapositiva entera mide las dos cosas. Se cuentan formas y se excluyen
+    # los iconos por su nombre ("icon:*", que pone _icon_shape).
     for n in (3, 4, 5):
         slide = s.add_next_steps(_prs(), "Pasos", [_paso()] * n)
+        arcos = [sp for sp in slide.shapes
+                 if not sp.name.startswith("icon:")
+                 and "<a:custGeom>" in sp._element.xml]
+        assert len(arcos) == n - 1, "arcos con n=%d" % n
         xml = slide.shapes._spTree.xml
-        # OJO: "custGeom" aparece dos veces por forma (apertura y cierre).
-        assert xml.count("<a:custGeom>") == n - 1, "arcos con n=%d" % n
         assert xml.count('prst="triangle"') == n - 1, "puntas con n=%d" % n
 
 

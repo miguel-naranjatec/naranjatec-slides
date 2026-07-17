@@ -19,7 +19,10 @@ repo y su `.pptx` no se versiona (`output/` esta ignorado).
 
 Las 4 familias tipograficas son OFL y Material Symbols es Apache-2.0:
 redistribuirlas dentro del repo es legitimo. La fuente de iconos es una instancia
-estatica a peso 300 generada con `scripts/make_icon_font.py`.
+estatica a peso 300 generada con `scripts/make_icon_font.py`; ademas, los `.pptx`
+llevan dentro la GEOMETRIA de sus 29 iconos, derivada de esa fuente
+(`brand/icon_paths.py`). Apache-2.0 permite obras derivadas sin friccion (no hay
+reserved font name de por medio, al contrario que en OFL).
 
 ## Mensaje para el companero
 
@@ -35,11 +38,12 @@ Copiar y pegar tal cual:
 > 1. Clona el repo en la carpeta donde trabajes con Claude:
 >    `git clone https://github.com/miguel-naranjatec/naranjatec-slides.git`
 > 2. `cd naranjatec-slides` y luego `pip install -r requirements.txt`
-> 3. **Instala las fuentes.** No es opcional: sin ellas los iconos salen como
->    cuadrados negros.
+> 3. **Instala las fuentes** (recomendado, no imprescindible). Sin ellas el deck
+>    se ve y funciona igual, solo que PowerPoint sustituye la tipografia por otra
+>    sans. Los iconos NO dependen de esto: son formas, no texto.
 >    - Windows: abre `brand/assets/fonts/`, selecciona todos los `.ttf` de las
->      subcarpetas `static/` y el `.otf` de `Material_Icons/`, clic derecho ->
->      Instalar.
+>      subcarpetas `static/`, clic derecho -> Instalar. (`Material_Icons/` no hace
+>      falta: no se instala en ninguna parte.)
 >    - Mac: `python scripts/preview.py --install-fonts`
 >
 > **Compruebalo**

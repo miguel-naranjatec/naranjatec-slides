@@ -31,6 +31,7 @@ from pptx.oxml import parse_xml
 from pptx.oxml.ns import qn
 from pptx.util import Emu, Inches, Pt
 
+import brand.icon_paths as IP
 import brand.theme as T
 
 _BLANK = 6
@@ -340,31 +341,118 @@ def _decor(slide, x, y, size, rotation=0, alpha=14000, blur=120000):
     return pic
 
 
+# Un icono es una FORMA NATIVA, no un run de texto con una fuente de iconos.
+# Motivo: un glifo PUA (U+E000-U+F8FF) exige que el receptor tenga la fuente
+# instalada Y que su PowerPoint enrute el caracter a esa fuente. Los codepoints
+# PUA no pertenecen a ningun script, asi que el enrutado es ambiguo: en
+# PowerPoint for Mac falla de forma intermitente, y macOS tiene fuentes de
+# sistema que reclaman parte del rango PUA (por eso fallan unos iconos y otros
+# no). Como forma no hay fuente que resolver: se ve igual en PowerPoint Windows,
+# PowerPoint Mac y LibreOffice headless (que es quien exporta el PDF del
+# cliente). Mismo razonamiento que la estrella nativa de add_quote.
+#
+# La geometria vive en brand/icon_paths.py, generada del .ttf por
+# scripts/make_icon_paths.py. El .ttf sigue siendo la fuente de verdad, pero
+# solo en build-time: ya no hace falta instalarlo en ninguna maquina.
+_GLYPH_NAME = {v: k for k, v in T.ICON.items()}
+_GEOM_CACHE = {}
+
+# El icono NO llena su caja: ocupa 26pt por pulgada de caja = 26/72. Venia de
+# cuando era texto (el em de la fuente ES la rejilla 24x24 del icono) y es lo
+# que le da la proporcion de badge dentro de un chip o un circulo. Se conserva
+# para que el cambio sea neutro.
+ICON_BOX_RATIO = 26.0 / 72.0
+
+
+def _icon_geom(name):
+    """XML del a:custGeom de un icono. TODOS los contornos van en un UNICO
+    <a:path>: es lo que hace que los contornos interiores (el agujero de lock, la
+    cabeza de person) se recorten en vez de rellenarse. Los contornos interiores
+    vienen con winding opuesto al exterior, y el generador filtra los degenerados
+    que dejo el congelado del eje wght; con eso, even-odd y non-zero dan el mismo
+    resultado en los 29 iconos, asi que no dependemos de que regla de relleno
+    aplique cada renderizador (ver tests/test_icon_paths.py)."""
+    if name not in _GEOM_CACHE:
+        out = []
+        for contour in IP.ICON_PATHS[name]:
+            for seg in contour:
+                k = seg[0]
+                if k == "m":
+                    out.append('<a:moveTo><a:pt x="%d" y="%d"/></a:moveTo>'
+                               % seg[1:])
+                elif k == "l":
+                    out.append('<a:lnTo><a:pt x="%d" y="%d"/></a:lnTo>'
+                               % seg[1:])
+                elif k == "q":
+                    out.append('<a:quadBezTo><a:pt x="%d" y="%d"/>'
+                               '<a:pt x="%d" y="%d"/></a:quadBezTo>' % seg[1:])
+                elif k == "c":
+                    out.append('<a:cubicBezTo><a:pt x="%d" y="%d"/>'
+                               '<a:pt x="%d" y="%d"/><a:pt x="%d" y="%d"/>'
+                               '</a:cubicBezTo>' % seg[1:])
+                elif k == "z":
+                    out.append("<a:close/>")
+        # El orden de los hijos de CT_CustomGeometry2D es OBLIGATORIO
+        # (avLst, gdLst, ahLst, cxnLst, rect, pathLst): equivocarlo da un .pptx
+        # que PowerPoint se niega a abrir.
+        _GEOM_CACHE[name] = (
+            '<a:custGeom xmlns:a="%s"><a:avLst/><a:gdLst/><a:ahLst/>'
+            '<a:cxnLst/><a:rect l="0" t="0" r="r" b="b"/><a:pathLst>'
+            '<a:path w="%d" h="%d">%s</a:path></a:pathLst></a:custGeom>'
+            % (_A, IP.ICON_BOX, IP.ICON_BOX, "".join(out)))
+    return _GEOM_CACHE[name]
+
+
+def _icon_shape(slide, x, y, side, glyph, color=T.AZUL_OSCURO):
+    """Pinta un icono como forma nativa ocupando EXACTAMENTE la caja side x side.
+
+    Es el primitivo de bajo nivel: recibe el lado del icono ya calculado. Quien
+    quiera la regla de "26pt por pulgada de caja contenedora" que use _icon."""
+    name = _GLYPH_NAME.get(glyph)
+    if name is None:
+        raise KeyError(
+            "glifo desconocido (%r): no esta en theme.ICON, asi que no hay "
+            "geometria para el. Los iconos se dibujan desde brand/icon_paths.py; "
+            "para anadir uno, ver scripts/make_icon_font.py y make_icon_paths.py."
+            % glyph)
+    sp = _rect(slide, x, y, side, side, fill=color)
+    spPr = sp._element.spPr
+    for tag in ("a:prstGeom", "a:custGeom"):
+        el = spPr.find(qn(tag))
+        if el is not None:
+            spPr.remove(el)
+    geom = parse_xml(_icon_geom(name))
+    xfrm = spPr.find(qn("a:xfrm"))
+    if xfrm is not None:
+        xfrm.addnext(geom)
+    else:
+        spPr.insert(0, geom)
+    sp.name = "icon:%s" % name
+    return sp
+
+
 def _icon(slide, x, y, size, glyph, color=T.AZUL_OSCURO, align=PP_ALIGN.CENTER,
           nudge=-0.04):
-    """Dibuja un icono monolinea (T.FONT_ICON = Material Symbols Outlined 300) centrado
-    en la caja, con un pequeno nudge vertical (-4%) para el centrado optico.
+    """Dibuja un icono monolinea centrado en una caja `size` x `size`, con un
+    pequeno nudge vertical (-4%) para el centrado optico.
 
     align=PP_ALIGN.LEFT cuando el icono debe alinear su borde izquierdo con el
     texto de debajo (chips y badges lo quieren centrado; una tarjeta, no).
     nudge=0.0 dentro de un circulo: ahi el centro geometrico es el bueno."""
+    # El redondeo a puntos enteros y el suelo de 10pt son herencia de dimensionar
+    # por tamano de fuente; una forma no los necesita. Se conservan para que el
+    # cambio a forma nativa sea geometricamente un no-op y se pueda comparar
+    # contra el render anterior. Quitarlos es otro cambio, no este.
+    side = int(round(max(10, round(int(size) / 914400 * 26)) * 12700))
     dy = int(round(int(size) * nudge))
-    b = slide.shapes.add_textbox(x, Emu(int(y) + dy), size, size)
-    tf = b.text_frame
-    tf.word_wrap = False
-    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
-    tf.margin_left = 0
-    tf.margin_right = 0
-    tf.margin_top = 0
-    tf.margin_bottom = 0
-    p = tf.paragraphs[0]
-    p.alignment = align
-    r = p.add_run()
-    r.text = glyph
-    r.font.name = T.FONT_ICON
-    r.font.size = Pt(max(10, round(int(size) / 914400 * 26)))
-    r.font.color.rgb = color
-    return b
+    top = int(y) + dy + (int(size) - side) // 2
+    if align == PP_ALIGN.LEFT:
+        left = int(x)
+    elif align == PP_ALIGN.RIGHT:
+        left = int(x) + int(size) - side
+    else:
+        left = int(x) + (int(size) - side) // 2
+    return _icon_shape(slide, Emu(left), Emu(top), Emu(side), glyph, color)
 
 
 def _icon_chip(slide, x, y, size, glyph, bg=None, fg=T.AMARILLO):
@@ -2374,11 +2462,15 @@ def add_message(prs, eyebrow, title, image, lead, body, author, role="",
                         "font": T.FONT_BODY})]])
 
     # Comillas grandes solapando la foto. No se usa _icon: ese helper deriva el
-    # cuerpo de la caja (26pt por pulgada) y aqui hace falta un glifo enorme.
-    _text(slide, Emu(img_x + int(Inches(0.35))), Inches(0.55), Inches(2.0),
-          Inches(1.6),
-          [[(T.ICON["quote"], {"size": Pt(72), "color": T.AMARILLO,
-                               "font": T.FONT_ICON})]])
+    # lado de la caja (26pt por pulgada) y aqui hace falta un icono enorme, asi
+    # que se llama al primitivo con el lado explicito. Pt(72) era el cuerpo de la
+    # fuente y el em de esta fuente ES la caja del icono, asi que 72pt = 1.0 in
+    # de lado reproduce el tamano que tenia como texto.
+    # La Y (0.5) esta MEDIDA contra el render anterior, no calculada: como texto,
+    # la caja iba a 0.55 y el interlineado del 105% de _text movia la linea base
+    # de forma que no se deriva en el papel.
+    _icon_shape(slide, Emu(img_x + int(Inches(0.35))), Inches(0.5), Inches(1.0),
+                T.ICON["quote"], color=T.AMARILLO)
 
     # Columna derecha: entradilla en negrita + cuerpo.
     rx = img_x + img_w + int(Inches(0.7))
